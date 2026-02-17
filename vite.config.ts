@@ -5,26 +5,26 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: '/', // Ensures assets load from the root
       server: {
         port: 3000,
         host: '0.0.0.0',
-        // Add this section to allow the Render host
-        allowedHosts: [
-          'built-theory-elite.onrender.com',
-          'built-theory.com',
-          '.built-theory.com'
-        ]
-      },
-      preview: {
-        port: 4173,
-        host: '0.0.0.0',
-        // Also add here if you are using 'yarn preview'
         allowedHosts: [
           'built-theory-elite.onrender.com',
           'built-theory.com'
         ]
       },
+      preview: {
+        port: 4173,
+        host: '0.0.0.0',
+        allowedHosts: true // Allows all hosts for the preview server
+      },
       plugins: [react()],
-      // ... rest of your config
+      define: {
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: { '@': path.resolve(__dirname, '.') }
+      }
     };
 });
