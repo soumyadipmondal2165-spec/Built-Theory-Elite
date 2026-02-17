@@ -8,20 +8,23 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        // Add this section to allow the Render host
         allowedHosts: [
-          'built-theory-elite.onrender.com'
+          'built-theory-elite.onrender.com',
+          'built-theory.com',
+          '.built-theory.com'
         ]
-        // -----------------------------------------------------
+      },
+      preview: {
+        port: 4173,
+        host: '0.0.0.0',
+        // Also add here if you are using 'yarn preview'
+        allowedHosts: [
+          'built-theory-elite.onrender.com',
+          'built-theory.com'
+        ]
       },
       plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      }
+      // ... rest of your config
     };
 });
