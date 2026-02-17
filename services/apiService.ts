@@ -1,5 +1,5 @@
 // This service interacts with the Python backend provided in the context
-const API_BASE = "https://built-theory-frontend.onrender.com/api"; 
+const API_BASE = "https://built-theory-elite.onrender.com/api"; 
 
 export const processTool = async (toolId: string, formData: FormData): Promise<Blob> => {
   // In a real environment, we would post to the specific endpoint.
