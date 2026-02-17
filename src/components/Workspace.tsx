@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tool, User } from '../../types';
-import { processTool } from '../apiService';
+import { processTool } from '../services/apiService';
 
 interface WorkspaceProps {
   tool: Tool;
