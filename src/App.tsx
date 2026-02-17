@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
-import Header from './services/components/Header';
-import Hero from './services/components/Hero';
-import ToolGrid from './services/components/ToolGrid';
-import Workspace from './services/components/Workspace';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import ToolGrid from './components/ToolGrid';
+import Workspace from './components/Workspace';
 import { TOOLS } from './constants';
 import { Tool, User } from './types';
 
