@@ -8,5 +8,6 @@ fpdf2
 pdfplumber
 pdf2docx
 pypdf
+huggingface_hub
 google-generativeai
 gunicorn
