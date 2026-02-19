@@ -238,7 +238,10 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
     try {
       let finalBlob: Blob;
 
-      // FIXED: Use Local pdf-lib for Merge (Fastest & No Corruption)
+try {
+      let finalBlob: Blob;
+
+      // 1. LOCAL MERGE ENGINE (Runs in browser)
       if (tool.id === 'merge') {
           const mergedPdf = await PDFDocument.create();
           for (const file of files) {
@@ -250,12 +253,40 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
           const pdfBytes = await mergedPdf.save();
           finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       } 
+      // 2. NEW: LOCAL JPG/PNG TO PDF ENGINE (Runs in browser - Fixes "Failed to Fetch")
+      else if (tool.id === 'img2pdf') {
+          const pdfDoc = await PDFDocument.create();
+          for (const file of files) {
+              const imageBytes = await file.arrayBuffer();
+              let image;
+              
+              // Detect if image is PNG or JPG/JPEG
+              if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+                  image = await pdfDoc.embedPng(imageBytes);
+              } else {
+                  image = await pdfDoc.embedJpg(imageBytes);
+              }
+
+              // Create page based on image dimensions
+              const page = pdfDoc.addPage([image.width, image.height]);
+              page.drawImage(image, { 
+                  x: 0, 
+                  y: 0, 
+                  width: image.width, 
+                  height: image.height 
+              });
+          }
+          const pdfBytes = await pdfDoc.save();
+          finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      }
+      // 3. REMOTE API (Tools that still require your Python server)
       else {
           const formData = new FormData();
           files.forEach(f => formData.append('files', f));
           if (files.length > 0) formData.append('file', files[0]);
           Object.keys(options).forEach(key => formData.append(key, options[key]));
 
+          // Handle electronic signature overlay
           if (tool.id === 'sign' && canvasRef.current) {
                await new Promise<void>(resolve => {
                    canvasRef.current?.toBlob(blob => {
@@ -267,15 +298,16 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
 
           const blob = await processTool(tool.id, formData);
           
-          // VERIFICATION: Check for 100-byte errors
+          // Size check: If it's under 500 bytes, it's likely a text error message, not a PDF
           if (blob.size < 500) {
               const text = await blob.text();
-              console.error("Server Error:", text);
-              throw new Error("Server Error: The file was not generated correctly.");
+              console.error("Backend Error Details:", text);
+              throw new Error("The server failed to create a valid file.");
           }
           finalBlob = blob;
       }
 
+      // --- LOGIC BELOW REMAINS THE SAME ---
       clearInterval(progressInterval);
       setProcessingProgress(100);
       if (tool.id === 'ppt_gen') incrementTopicLimit();
@@ -287,12 +319,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
       if (tool.id === 'pdf2jpg') ext = 'zip'; 
       
       const fileName = `BuiltTheory_${tool.id}_Result.${ext}`;
-      
-      // Store in state so the "Download File" button works in Step 2
       setResultBlob(finalBlob);
       setResultFileName(fileName);
 
-      // Auto-download first
       triggerDownload(finalBlob, fileName);
       setTimeout(() => setStep('done'), 500);
 
