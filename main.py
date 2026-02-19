@@ -1,34 +1,55 @@
 import os
 import io
 import tempfile
+import requests
+import pdfkit
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import pandas as pd
 from pptx import Presentation
+from pptx.util import Inches
 from docx import Document
 from fpdf import FPDF
 import pdfplumber
 from pdf2docx import Converter
 from pypdf import PdfReader, PdfWriter
 import google.generativeai as genai
+from huggingface_hub import InferenceClient
 
 app = Flask(__name__)
 CORS(app)
 
-# Helper: Create PDF from text (used for Office -> PDF)
+# --- CONFIGURATION ---
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+hf_client = InferenceClient(api_key=os.environ.get("HF_TOKEN"))
+
+# Helper: Create PDF from text
 def text_to_pdf_blob(text_content):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Helvetica", size=11)
     for line in text_content.split('\n'):
-        pdf.multi_cell(0, 10, text=line)
+        clean_line = line.encode('ascii', 'ignore').decode('ascii')
+        pdf.multi_cell(0, 10, text=clean_line)
     return io.BytesIO(pdf.output())
 
-# --- 1. OFFICE TO PDF ---
+# --- 1. NEW: WEBPAGE TO PDF ---
+@app.route('/api/web2pdf', methods=['POST'])
+def web_to_pdf():
+    try:
+        url = request.form.get('url')
+        if not url: return jsonify({"error": "URL is required"}), 400
+        
+        # Converts URL to PDF using pdfkit
+        pdf_bytes = pdfkit.from_url(url, False)
+        return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf', as_attachment=True, download_name="webpage.pdf")
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+# --- 2. OFFICE TO PDF (Word, Excel, PPT) ---
 @app.route('/api/word2pdf', methods=['POST'])
 def word_to_pdf():
     try:
-        file = request.files['files']
+        file = request.files.get('files')
         doc = Document(file)
         text = "\n".join([p.text for p in doc.paragraphs])
         return send_file(text_to_pdf_blob(text), mimetype='application/pdf')
@@ -37,7 +58,7 @@ def word_to_pdf():
 @app.route('/api/excel2pdf', methods=['POST'])
 def excel_to_pdf():
     try:
-        file = request.files['files']
+        file = request.files.get('files')
         df = pd.read_excel(file)
         return send_file(text_to_pdf_blob(df.to_string()), mimetype='application/pdf')
     except Exception as e: return jsonify({"error": str(e)}), 500
@@ -45,17 +66,17 @@ def excel_to_pdf():
 @app.route('/api/ppt2pdf', methods=['POST'])
 def ppt_to_pdf():
     try:
-        file = request.files['files']
+        file = request.files.get('files')
         prs = Presentation(file)
         text = "\n".join([shape.text for slide in prs.slides for shape in slide.shapes if hasattr(shape, "text")])
         return send_file(text_to_pdf_blob(text), mimetype='application/pdf')
     except Exception as e: return jsonify({"error": str(e)}), 500
 
-# --- 2. PDF TO OFFICE ---
+# --- 3. PDF TO OFFICE (Word, Excel, PPT) ---
 @app.route('/api/pdf2word', methods=['POST'])
 def pdf_to_word():
     try:
-        file = request.files['files']
+        file = request.files.get('files')
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tf:
             file.save(tf.name)
             out_path = tf.name.replace(".pdf", ".docx")
@@ -66,7 +87,7 @@ def pdf_to_word():
 @app.route('/api/pdf2excel', methods=['POST'])
 def pdf_to_excel():
     try:
-        file = request.files['files']
+        file = request.files.get('files')
         all_data = []
         with pdfplumber.open(file) as pdf:
             for page in pdf.pages:
@@ -78,22 +99,7 @@ def pdf_to_excel():
         return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True)
     except Exception as e: return jsonify({"error": str(e)}), 500
 
-@app.route('/api/pdf2ppt', methods=['POST'])
-def pdf_to_ppt():
-    try:
-        file = request.files['files']
-        prs = Presentation()
-        with pdfplumber.open(file) as pdf:
-            for page in pdf.pages:
-                text = page.extract_text()
-                slide = prs.slides.add_slide(prs.slide_layouts[1])
-                slide.shapes.title.text = "Extracted Slide"
-                slide.placeholders[1].text = text[:1000] if text else "No text found"
-        output = io.BytesIO(); prs.save(output); output.seek(0)
-        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True)
-    except Exception as e: return jsonify({"error": str(e)}), 500
-
-# --- 3. PDF TOOLS (COMPRESS, SPLIT, ROTATE) ---
+# --- 4. PDF TOOLS (Compress, Split, Rotate) ---
 @app.route('/api/compress', methods=['POST'])
 def compress_pdf():
     try:
@@ -109,30 +115,35 @@ def compress_pdf():
 def split_pdf():
     try:
         reader = PdfReader(request.files['files']); writer = PdfWriter()
-        # Extracts first page for demo - can be customized with page range logic
-        writer.add_page(reader.pages[0])
+        writer.add_page(reader.pages[0]) # Default: first page
         out = io.BytesIO(); writer.write(out); out.seek(0)
         return send_file(out, mimetype='application/pdf')
     except Exception as e: return jsonify({"error": str(e)}), 500
 
-# --- 4. AI PRESENTATION GEN ---
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
+# --- 5. AI PPT GENERATION (With FLUX Images) ---
 @app.route('/api/ppt_gen', methods=['POST'])
 def generate_ppt():
     try:
         topic = request.form.get('topic', 'Topic')
-        count = int(request.form.get('slides', 5))
+        slide_count = int(request.form.get('slides', 5))
+        
+        # Text via Gemini
         model = genai.GenerativeModel('gemini-pro')
-        response = model.generate_content(f"Presentation outline: {topic}, {count} slides. Bullet points.")
+        response = model.generate_content(f"Outline for {topic}, {slide_count} slides.")
+        
+        # Image via FLUX
+        image = hf_client.text_to_image(f"Engineering diagram of {topic}, 4k", model="black-forest-labs/FLUX.1-dev", provider="together")
+        img_io = io.BytesIO(); image.save(img_io, format='PNG'); img_io.seek(0)
+
         prs = Presentation()
-        slide = prs.slides.add_slide(prs.slide_layouts[0])
-        slide.shapes.title.text = topic
-        for i in range(count): prs.slides.add_slide(prs.slide_layouts[1])
-        out = io.BytesIO(); prs.save(out); out.seek(0)
-        return send_file(out, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True)
+        # Slide 1 with Image
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.shapes.add_picture(img_io, Inches(0), Inches(0), width=prs.slide_width)
+        
+        output = io.BytesIO(); prs.save(output); output.seek(0)
+        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True)
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 7860))
     app.run(host='0.0.0.0', port=port)
