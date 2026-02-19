@@ -15,6 +15,8 @@ from pdf2docx import Converter
 from pypdf import PdfReader, PdfWriter
 import google.generativeai as genai
 from huggingface_hub import InferenceClient
+import pytesseract
+from PIL import Image
 
 app = Flask(__name__)
 CORS(app)
@@ -142,6 +144,34 @@ def generate_ppt():
         
         output = io.BytesIO(); prs.save(output); output.seek(0)
         return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True)
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+# --- OCR ENGINE (Image to Text) ---
+@app.route('/api/ocr', methods=['POST'])
+def ocr_tool():
+    try:
+        file = request.files.get('files')
+        # Open the image and use Tesseract to "read" it
+        img = Image.open(file)
+        text = pytesseract.image_to_string(img)
+        
+        # We can return this as a PDF of the extracted text
+        return send_file(text_to_pdf_blob(text), mimetype='application/pdf', download_name="ocr_result.pdf")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- SECURITY ENGINE (Protect PDF) ---
+@app.route('/api/protect', methods=['POST'])
+def protect_pdf():
+    try:
+        file = request.files.get('files')
+        password = request.form.get('password', '1234')
+        reader = PdfReader(file); writer = PdfWriter()
+        for page in reader.pages: writer.add_page(page)
+        
+        writer.encrypt(password)
+        out = io.BytesIO(); writer.write(out); out.seek(0)
+        return send_file(out, mimetype='application/pdf')
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
