@@ -1,31 +1,34 @@
-// This service interacts with the Python backend provided in the context
+// This service interacts with the Python backend on Render
 const API_BASE = "https://built-theory-elite.onrender.com/api"; 
 
 export const processTool = async (toolId: string, formData: FormData): Promise<Blob> => {
-  // In a real environment, we would post to the specific endpoint.
-  // For demo purposes, we will simulate a success response if the backend isn't reachable
-  // or actually try to fetch if CORS allows.
-  
   try {
     const response = await fetch(`${API_BASE}/${toolId}`, {
       method: 'POST',
       body: formData,
     });
 
+    // RECTIFIED: If server returns 404, 500, or 403, we must handle the error
     if (!response.ok) {
-        // Fallback for simulation if backend is down
-        console.warn("Backend unavailable, simulating response.");
-        return new Blob(['Simulated PDF Content'], { type: 'application/pdf' });
+        const errorText = await response.text();
+        console.error(`Server Error (${response.status}):`, errorText);
+        
+        // We throw an actual error so Workspace.tsx knows to stop
+        throw new Error(`Server Error: ${response.status}. Please check backend logs.`);
     }
 
-    return await response.blob();
+    const blob = await response.blob();
+
+    // RECTIFIED: Final check to ensure we didn't get an empty response
+    if (blob.size < 100) {
+        throw new Error("The server returned an empty or invalid file.");
+    }
+
+    return blob;
+
   } catch (error) {
-    console.error("API Error:", error);
-    // Simulate success for UI demonstration
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(new Blob(['Simulated PDF Content'], { type: 'application/pdf' }));
-        }, 2000);
-    });
+    console.error("Connection Error:", error);
+    // RECTIFIED: Stop the simulation. Throw the error to the UI.
+    throw error; 
   }
 };
