@@ -7,5 +7,6 @@ python-docx
 fpdf2
 pdfplumber
 pdf2docx
-gunicorn
+pypdf
 google-generativeai
+gunicorn
