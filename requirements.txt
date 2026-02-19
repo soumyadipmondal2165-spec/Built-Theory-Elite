@@ -12,3 +12,4 @@ pdf2docx
 pypdf
 google-generativeai
 gunicorn
+pytesseract
