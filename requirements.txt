@@ -1,13 +1,14 @@
+pdfkit
+huggingface_hub
+python-pptx
 flask
 flask-cors
 pandas
 openpyxl
-python-pptx
 python-docx
 fpdf2
 pdfplumber
 pdf2docx
 pypdf
-huggingface_hub
 google-generativeai
 gunicorn
