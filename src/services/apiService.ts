@@ -1,5 +1,5 @@
 // This service interacts with your new Python Web Service on Render
-const API_BASE = "https://built-theory-elite.onrender.com/api"; 
+const API_BASE = "https://built-theory-elite-1.onrender.com/api"; 
 
 export const processTool = async (toolId: string, formData: FormData): Promise<Blob> => {
   try {
