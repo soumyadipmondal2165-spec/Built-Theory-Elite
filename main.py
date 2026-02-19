@@ -9,6 +9,7 @@ from docx import Document
 from fpdf import FPDF
 import pdfplumber
 from pdf2docx import Converter
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app) # Ensures your website can communicate with this backend
@@ -85,6 +86,29 @@ def pdf_to_excel():
         pd.DataFrame(all_data).to_excel(output, index=False)
         output.seek(0)
         return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Configure Gemini AI
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+@app.route('/api/ppt_gen', methods=['POST'])
+def generate_ppt():
+    try:
+        topic = request.form.get('topic', 'General Topic')
+        slide_count = int(request.form.get('slides', 5))
+        
+        model = genai.GenerativeModel('gemini-pro')
+        prompt = f"Create a detailed presentation outline for '{topic}' with {slide_count} slides. Title and 3-4 bullet points per slide."
+        response = model.generate_content(prompt)
+        
+        prs = Presentation()
+        # (Insert the presentation logic provided in the previous step here)
+        
+        output = io.BytesIO()
+        prs.save(output)
+        output.seek(0)
+        return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation', as_attachment=True)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
