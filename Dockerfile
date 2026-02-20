@@ -1,5 +1,5 @@
 # 1. Use a stable Python base
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # 2. Install SYSTEM level engines (The "Brains" for your tools)
 # - wkhtmltopdf: Power for Webpage-to-PDF
