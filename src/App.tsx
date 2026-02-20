@@ -7,6 +7,7 @@ import ToolGrid from './components/ToolGrid';
 import Workspace from './components/Workspace';
 import { TOOLS } from './constants';
 import { Tool, User } from './types';
+import Footer from './components/Footer';
 
 // Firebase Config
 const firebaseConfig = {
@@ -222,7 +223,7 @@ const App: React.FC = () => {
             <p className="text-primary font-bold text-lg mb-2">Built-Theory PRO</p>
             <p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} All Engineering Tools Reserved.</p>
         </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
