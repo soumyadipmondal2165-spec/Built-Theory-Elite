@@ -218,12 +218,15 @@ const App: React.FC = () => {
           </div>
       )}
 
+      {/* FIXED FOOTER SECTION */}
       <footer className="bg-white border-t border-gray-200 py-12 mt-12">
         <div className="max-w-7xl mx-auto px-6 text-center">
             <p className="text-primary font-bold text-lg mb-2">Built-Theory PRO</p>
             <p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} All Engineering Tools Reserved.</p>
         </div>
-      <Footer />
+      </footer> {/* <--- You were missing this closing tag! */}
+
+      <Footer /> {/* This is your custom professional footer component */}
     </div>
   );
 };
