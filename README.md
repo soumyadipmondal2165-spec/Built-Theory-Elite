@@ -5,6 +5,7 @@ colorFrom: red
 colorTo: gray
 sdk: docker
 app_port: 7860
+app_file: main.py
 ---
 
 # 🏗️ Built Theory: Global AI Suite for Civil Engineering
