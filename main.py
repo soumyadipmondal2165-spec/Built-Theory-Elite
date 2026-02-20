@@ -15,12 +15,11 @@ from huggingface_hub import InferenceClient
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-# ... other imports ...
 
-# 1. Initialize the app FIRST
+# Initialize the app
 app = Flask(__name__)
 
-# 2. THEN apply CORS to the defined 'app'
+# Apply CORS with perfect vertical alignment
 CORS(app, resources={
     r"/api/*": {
         "origins": ["https://built-theory.com", "http://localhost:5173"],
@@ -28,15 +27,11 @@ CORS(app, resources={
         "allow_headers": ["Content-Type"]
     }
 })
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
-# 2. HOME ROUTE: Fixes the "Not Found" when you just visit the main link
-@app.route('/')
-def home():
-    return "<h1>Built-Theory Engine is Online</h1>", 200
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"status": "success", "message": "Built Theory API is running globally"})
+    
 # 3. HEALTH ROUTE: This makes your test link work
 @app.route('/api/health', methods=['GET'])
 def health_check():
