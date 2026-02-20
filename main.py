@@ -12,15 +12,22 @@ from pdf2docx import Converter
 from pypdf import PdfReader, PdfWriter
 import google.generativeai as genai
 from huggingface_hub import InferenceClient
-from flask_cors import CORS
+import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+# ... other imports ...
+
+# 1. Initialize the app FIRST
+app = Flask(__name__)
+
+# 2. THEN apply CORS to the defined 'app'
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "https://built-theory.com",
-            "https://www.built-theory.com",
-            "https://built-theory-elite-1.onrender.com"
-        ],
+        "origins": ["https://built-theory.com", "http://localhost:5173"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
