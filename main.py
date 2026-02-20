@@ -12,9 +12,34 @@ from pdf2docx import Converter
 from pypdf import PdfReader, PdfWriter
 import google.generativeai as genai
 from huggingface_hub import InferenceClient
+from flask_cors import CORS
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+
+# 1. FIXED CORS: This allows built-theory.com to talk to this engine
+CORS(app, resources={r"/api/*": {"origins": ["https://built-theory.com", "https://www.built-theory.com"]}})
+
+# 2. HOME ROUTE: Fixes the "Not Found" when you just visit the main link
+@app.route('/')
+def home():
+    return "<h1>Built-Theory Engine is Online</h1>", 200
+
+# 3. HEALTH ROUTE: This makes your test link work
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "Success", "message": "Backend is connected"}), 200
+
+# @app.route('/api/word-to-pdf', methods=['POST'])
+def word_to_pdf_tool(): # Changed name here
+    # ... logic ...
+    return send_file(...)
+
+@app.route('/api/another-tool', methods=['POST'])
+def another_tool(): # Make sure this name is unique too
+    # ... logic ...
+    return jsonify(...)
 
 # --- CONFIGURATION ---
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -251,5 +276,5 @@ def protect_pdf():
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 7860))
-    app.run(host='0.0.0.0', port=port)
+    # MANDATORY: Hugging Face requires port 7860
+    app.run(host='0.0.0.0', port=7860)
