@@ -120,7 +120,7 @@ const App: React.FC = () => {
         scrollToTools={scrollToTools}
       />
       
-      <main>
+<main>
         <Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />
         <ToolGrid tools={TOOLS} onSelectTool={handleSelectTool} />
       </main>
@@ -134,7 +134,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Pro Tool Notification Popup */}
+      {/* Pricing and Pro popups go here as per your previous code... */}
       {proToolAttempt && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]">
             <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative text-center border-4 border-white ring-4 ring-yellow-400/30">
