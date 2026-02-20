@@ -22,8 +22,9 @@ app = Flask(__name__)
 # Apply CORS with perfect vertical alignment
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["https://built-theory.com", "https://soumyadipmondal2165-built-theory-pro.hf.space"],
-        "methods": ["GET", "POST", "OPTIONS"]
+        "origins": ["*"],  # This opens the gate for testing
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
     }
 })
 
