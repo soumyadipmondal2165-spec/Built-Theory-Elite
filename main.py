@@ -14,13 +14,17 @@ import google.generativeai as genai
 from huggingface_hub import InferenceClient
 from flask_cors import CORS
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-
-app = Flask(__name__)
-
-# 1. FIXED CORS: This allows built-theory.com to talk to this engine
-CORS(app, resources={r"/api/*": {"origins": ["https://built-theory.com", "https://www.built-theory.com"]}})
-
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://built-theory.com",
+            "https://www.built-theory.com",
+            "https://built-theory-elite-1.onrender.com"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 # 2. HOME ROUTE: Fixes the "Not Found" when you just visit the main link
 @app.route('/')
 def home():
