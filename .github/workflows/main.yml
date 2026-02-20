@@ -1,8 +1,8 @@
 name: Sync to Hugging Face hub
 on:
   push:
-    branches: [main, master] # Triggers on both common branch names
-  workflow_dispatch: # Allows you to run this manually for testing
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   sync-to-hub:
@@ -11,10 +11,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true # Essential if you have large engineering assets or images
+          lfs: true # Crucial for handling any engineering diagrams or assets
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # This command forces the push to your specific HF Space
+          # Force sync your code to the Hugging Face engine
           git push --force https://soumyadipmondal2165:$HF_TOKEN@huggingface.co/spaces/soumyadipmondal2165/Built-Theory-Pro main
