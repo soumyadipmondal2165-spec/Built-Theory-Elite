@@ -27,4 +27,4 @@ COPY . .
 
 # 6. Start the server (Mandatory port 7860 for Hugging Face)
 # Using gunicorn as the heavy-duty engine for your Flask app
-CMD ["gunicorn", "--bind", "0.0.0.0:7860", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:7860", "--workers", "2", "--threads", "4", "--timeout", "120", "main:app"]
