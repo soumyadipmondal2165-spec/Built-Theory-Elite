@@ -7,7 +7,11 @@ export default defineConfig({
   base: '/',
   server: {
     host: '0.0.0.0',
-    allowedHosts: ['built-theory-elite.onrender.com', 'built-theory.com']
+    allowedHosts: [
+      'built-theory.com', 
+      'soumyadipmondal2165-built-theory-pro.hf.space', // New Hugging Face host
+      'localhost'
+    ]
   },
   preview: {
     port: 4173,
