@@ -21,11 +21,10 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 # 2. THEN apply CORS to the defined 'app'
-CORS(app, resources={
+CORS(app, resources={ # Then apply settings
     r"/api/*": {
-        "origins": ["https://built-theory.com", "http://localhost:5173"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "origins": ["https://built-theory.com"],
+        "methods": ["GET", "POST", "OPTIONS"]
     }
 })
         "methods": ["GET", "POST", "OPTIONS"],
