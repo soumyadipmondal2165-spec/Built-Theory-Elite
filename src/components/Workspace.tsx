@@ -215,7 +215,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
     e.target.value = '';
   };
 
-  // RECTIFIED: Main Processing Engine
+// RECTIFIED: Main Processing Engine
   const executeProcess = async () => {
     if (tool.id === 'ppt_gen' && !checkTopicLimit()) {
         if(window.confirm("Free limit reached. Upgrade to Pro?")) onJoinPro();
@@ -235,13 +235,10 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
         setProcessingProgress(prev => (prev >= 95 ? 95 : prev + 2));
     }, 100);
 
-    try {
+    try { // <--- শুধুমাত্র একটি 'try' থাকবে
       let finalBlob: Blob;
 
-try {
-      let finalBlob: Blob;
-
-      // 1. LOCAL MERGE ENGINE (Runs in browser)
+      // 1. LOCAL MERGE ENGINE
       if (tool.id === 'merge') {
           const mergedPdf = await PDFDocument.create();
           for (const file of files) {
@@ -253,40 +250,30 @@ try {
           const pdfBytes = await mergedPdf.save();
           finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       } 
-      // 2. NEW: LOCAL JPG/PNG TO PDF ENGINE (Runs in browser - Fixes "Failed to Fetch")
+      // 2. LOCAL JPG/PNG TO PDF ENGINE
       else if (tool.id === 'img2pdf') {
           const pdfDoc = await PDFDocument.create();
           for (const file of files) {
               const imageBytes = await file.arrayBuffer();
               let image;
-              
-              // Detect if image is PNG or JPG/JPEG
               if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
                   image = await pdfDoc.embedPng(imageBytes);
               } else {
                   image = await pdfDoc.embedJpg(imageBytes);
               }
-
-              // Create page based on image dimensions
               const page = pdfDoc.addPage([image.width, image.height]);
-              page.drawImage(image, { 
-                  x: 0, 
-                  y: 0, 
-                  width: image.width, 
-                  height: image.height 
-              });
+              page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
           }
           const pdfBytes = await pdfDoc.save();
           finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       }
-      // 3. REMOTE API (Tools that still require your Python server)
+      // 3. REMOTE API
       else {
           const formData = new FormData();
           files.forEach(f => formData.append('files', f));
           if (files.length > 0) formData.append('file', files[0]);
           Object.keys(options).forEach(key => formData.append(key, options[key]));
 
-          // Handle electronic signature overlay
           if (tool.id === 'sign' && canvasRef.current) {
                await new Promise<void>(resolve => {
                    canvasRef.current?.toBlob(blob => {
@@ -297,17 +284,14 @@ try {
           }
 
           const blob = await processTool(tool.id, formData);
-          
-          // Size check: If it's under 500 bytes, it's likely a text error message, not a PDF
           if (blob.size < 500) {
               const text = await blob.text();
-              console.error("Backend Error Details:", text);
               throw new Error("The server failed to create a valid file.");
           }
           finalBlob = blob;
       }
 
-      // --- LOGIC BELOW REMAINS THE SAME ---
+      // Final cleanup and download logic
       clearInterval(progressInterval);
       setProcessingProgress(100);
       if (tool.id === 'ppt_gen') incrementTopicLimit();
@@ -321,7 +305,6 @@ try {
       const fileName = `BuiltTheory_${tool.id}_Result.${ext}`;
       setResultBlob(finalBlob);
       setResultFileName(fileName);
-
       triggerDownload(finalBlob, fileName);
       setTimeout(() => setStep('done'), 500);
 
