@@ -1,15 +1,14 @@
-# 1. Use a stable Python base
-FROM python:3.10-slim
+# 1. Use a stable Python base (Bullseye is the stable foundation for engineering tools)
+FROM python:3.10-slim-bullseye
 
-# 2. Install SYSTEM level engines (The "Brains" for your tools)
-# - wkhtmltopdf: Power for Webpage-to-PDF
-# - tesseract-ocr: Power for OCR (Reading text from images)
-# - libgl1: Power for OpenCV and AI image processing
+# 2. Install SYSTEM level engines
+# - wkhtmltopdf: Now available because we switched to Bullseye
+# - libgl1: The rectified name for libgl1-mesa-glx
 RUN apt-get update && apt-get install -y \
     wkhtmltopdf \
     tesseract-ocr \
     libtesseract-dev \
-    libgl1-mesa-glx \
+    libgl1 \
     libxrender1 \
     libxext6 \
     libfontconfig1 \
@@ -19,13 +18,13 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # 4. Copy and install Python libraries
-# Ensure your requirements.txt has 'pytesseract', 'pdfkit', and 'Pillow'
+# This part of your logic was already structurally sound
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Copy the rest of your website backend code
 COPY . .
 
-# 6. Start the server (Using port 7860 for Hugging Face)
-# This port is mandatory for Hugging Face Spaces
+# 6. Start the server (Mandatory port 7860 for Hugging Face)
+# Using gunicorn as the heavy-duty engine for your Flask app
 CMD ["gunicorn", "--bind", "0.0.0.0:7860", "main:app"]
