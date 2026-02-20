@@ -30,3 +30,10 @@ const Footer = () => {
         </div>
 
         {/* ... (Education and SEO sections stay the same) ... */}
+      </div> {/* এই ক্লোজিং ট্যাগটি নিশ্চিত করুন (লাইন ৭ এর জন্য) */}
+    </footer>
+  );
+};
+
+export default Footer;
+        
