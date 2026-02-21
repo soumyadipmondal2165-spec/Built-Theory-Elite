@@ -1,0 +1,7 @@
+{
+  "name": "built-theory-elite",
+  "compatibility_date": "2026-02-21",
+  "assets": {
+    "directory": "./dist" // এটি Wrangler কে বলবে যে dist ফোল্ডারটি লাইভ করতে হবে
+  }
+}
