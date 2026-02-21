@@ -16,12 +16,13 @@ from huggingface_hub import InferenceClient
 # --- ১. অ্যাপ ইনিশিয়ালাইজেশন (শুধুমাত্র একবার!) ---
 app = Flask(__name__)
 
-import shutil # এটি ইম্পোর্ট লিস্টে যোগ করুন
+# main.py এর উপরের দিকে এটি যোগ করুন
+import shutil
 
-# --- RECTIFICATION START: System Binary Paths ---
-# ১. PDF ইঞ্জিন পাথ (Word to PDF এর জন্য)
-WKHTMLTOPDF_PATH = shutil.which("wkhtmltopdf") or '/usr/bin/wkhtmltopdf'
-pdf_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+# তেসারেক্ট এবং পিডিএফ ইঞ্জিনের সঠিক ঠিকানা নিশ্চিত করা
+pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract") or '/usr/bin/tesseract'
+WKHTML_PATH = shutil.which("wkhtmltopdf") or '/usr/bin/wkhtmltopdf'
+pdf_config = pdfkit.configuration(wkhtmltopdf=WKHTML_PATH)
 
 # ২. OCR ইঞ্জিন পাথ (Image to Text এর জন্য)
 pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract") or '/usr/bin/tesseract'
