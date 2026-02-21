@@ -1,38 +1,27 @@
-import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+// ESM পদ্ধতিতে __dirname তৈরি করা
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
   
-  // RECTIFIED: Change base to './' to ensure assets load correctly on Cloudflare/HF
+  // ক্লাউডফ্লেয়ার এবং হাগিং ফেসের জন্য রিলেটিভ পাথ
   base: './', 
   
-  server: {
-    host: '0.0.0.0',
-    allowedHosts: [
-      'built-theory.com', 
-      'soumyadipmondal2165-built-theory-pro.hf.space',
-      'localhost',
-      '.hf.space' // All Hugging Face spaces
-    ]
-  },
-  
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    emptyOutDir: true,
+  resolve: {
+    alias: {
+      // '@' সিম্বলকে src ফোল্ডারের সাথে কানেক্ট করা
+      '@': path.resolve(__dirname, './src'),
+    },
   },
 
-  preview: {
-    port: 4173,
-    host: '0.0.0.0',
-    allowedHosts: true
-  },
-  
-  resolve: {
-    alias: { 
-      '@': path.resolve(__dirname, './src') 
-    }
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
   }
 });
