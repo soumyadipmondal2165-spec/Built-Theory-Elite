@@ -28,10 +28,10 @@ pdf_config = pdfkit.configuration(wkhtmltopdf=WKHTML_PATH)
 pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract") or '/usr/bin/tesseract'
 # --- RECTIFICATION END ---
 
-# টেম্পোরারি ফোল্ডার তৈরি
+# সংশোধিত অংশ: exist_ok=True যোগ করা হয়েছে
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # CORS গেটওয়ে খোলা
 CORS(app, resources={r"/api/*": {"origins": ["*"]}})
