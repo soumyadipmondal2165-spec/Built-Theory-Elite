@@ -1,17 +1,40 @@
-/* src/index.css */
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light dark;
-  background-color: #0b0f19; /* আপনার এলিট ফুটারের সাথে সামঞ্জস্যপূর্ণ ডার্ক থিম */
-  color: #ffffff;
+/* ১. Default/Mobile View (সব স্ক্রিনের জন্য বেসিক সেটিংস) */
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+/* মোবাইল ইন্টারফেসের জন্য কন্টেন্ট এলাইনমেন্ট */
+main, .container {
+  width: 100%;
+  padding: 0 15px; /* মোবাইলে দুই পাশে সামান্য জায়গা রাখে */
+  box-sizing: border-box;
+}
+
+/* ২. Desktop View (যখন স্ক্রিন ১০২৪ পিক্সেলের চেয়ে বড় হবে) */
+@media (min-width: 1024px) {
+  #root {
+    max-width: 1440px; /* আপনার পছন্দের স্ট্যান্ডার্ড সাইজ */
+    margin: 0 auto;    /* এটিই আপনার সাইটকে মাঝখানে আনবে এবং ডানদিকের ফাঁকা জায়গা ভরাট করবে */
+    padding: 0 40px;   /* ডেস্কটপে প্রফেশনাল স্পেসিং */
+  }
+
+  /* ডেস্কটপে আপনার ৩-কলাম ফুটার এবং গ্রিড লেআউটগুলো সুন্দরভাবে দেখাবে */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 80px;
+  }
+}
+
+/* ৩. Tablet View (অপশনাল: মাঝারি স্ক্রিনের জন্য) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #root {
+    padding: 0 20px;
+  }
 }
