@@ -14,3 +14,6 @@ pdfkit
 pytesseract
 Pillow
 gunicorn
+tesseract-ocr
+libtesseract-dev
+wkhtmltopdf
