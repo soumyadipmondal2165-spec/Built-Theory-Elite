@@ -1,40 +1,85 @@
-/* ১. Default/Mobile View (সব স্ক্রিনের জন্য বেসিক সেটিংস) */
-#root {
+/* ১. গ্লোবাল লেআউট ফিক্স (ডানদিকের ফাঁকা জায়গা দূর করার জন্য) */
+.app-container {
   width: 100%;
-  margin: 0;
-  padding: 0;
+  max-width: 1400px;
+  margin: 0 auto; /* এটি সাইটকে সেন্টারে রাখবে */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ২. প্রিমিয়াম টুল কার্ড ডিজাইন */
+.tool-card {
+  background: #ffffff;
+  border: 1px solid rgba(227, 59, 47, 0.1); /* হালকা লাল বর্ডার */
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  box-sizing: border-box;
+  align-items: center;
+  text-align: center;
 }
 
-/* মোবাইল ইন্টারফেসের জন্য কন্টেন্ট এলাইনমেন্ট */
-main, .container {
-  width: 100%;
-  padding: 0 15px; /* মোবাইলে দুই পাশে সামান্য জায়গা রাখে */
-  box-sizing: border-box;
+.tool-card:hover {
+  transform: translateY(-8px); /* উপরে ভেসে উঠবে */
+  box-shadow: 0 20px 25px -5px rgba(227, 59, 47, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: #e33b2f; /* হোভারে লাল বর্ডার হবে */
 }
 
-/* ২. Desktop View (যখন স্ক্রিন ১০২৪ পিক্সেলের চেয়ে বড় হবে) */
+/* ৩. আইকন স্টাইল */
+.tool-icon {
+  font-size: 2.5rem;
+  color: #e33b2f;
+  margin-bottom: 16px;
+  transition: transform 0.3s ease;
+}
+
+.tool-card:hover .tool-icon {
+  transform: scale(1.1);
+}
+
+/* ৪. বাটন এবং ইন্টারেকশন */
+.btn-premium {
+  background: linear-gradient(135deg, #e33b2f 0%, #ff6b6b 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-premium:hover {
+  opacity: 0.9;
+}
+
+/* ৫. রেসপনসিভ গ্রিড (মোবাইল বনাম ডেস্কটপ) */
+.tools-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(1, 1fr); /* মোবাইলে ১টি কলাম */
+}
+
+@media (min-width: 768px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, 1fr); /* ট্যাবলেটে ২টি কলাম */
+  }
+}
+
 @media (min-width: 1024px) {
-  #root {
-    max-width: 1440px; /* আপনার পছন্দের স্ট্যান্ডার্ড সাইজ */
-    margin: 0 auto;    /* এটিই আপনার সাইটকে মাঝখানে আনবে এবং ডানদিকের ফাঁকা জায়গা ভরাট করবে */
-    padding: 0 40px;   /* ডেস্কটপে প্রফেশনাল স্পেসিং */
-  }
-
-  /* ডেস্কটপে আপনার ৩-কলাম ফুটার এবং গ্রিড লেআউটগুলো সুন্দরভাবে দেখাবে */
-  .footer-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 80px;
+  .tools-grid {
+    grid-template-columns: repeat(3, 1fr); /* ডেস্কটপে ৩টি কলাম */
   }
 }
 
-/* ৩. Tablet View (অপশনাল: মাঝারি স্ক্রিনের জন্য) */
-@media (min-width: 768px) and (max-width: 1023px) {
-  #root {
-    padding: 0 20px;
-  }
+/* ৬. সেকশন টাইটেল */
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2A2D3E;
+  margin-bottom: 40px;
+  border-left: 5px solid #e33b2f;
+  padding-left: 15px;
 }
