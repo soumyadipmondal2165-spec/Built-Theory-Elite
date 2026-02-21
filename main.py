@@ -13,26 +13,34 @@ from pypdf import PdfReader, PdfWriter
 import google.generativeai as genai
 from huggingface_hub import InferenceClient
 
-# --- 1. INITIALIZATION (Only Once!) ---
+# --- ১. অ্যাপ ইনিশিয়ালাইজেশন (শুধুমাত্র একবার!) ---
 app = Flask(__name__)
 
-# Folder creation for temporary files to prevent Error 500
+# টেম্পোরারি ফোল্ডার তৈরি
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Global CORS Policy
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["*"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+# CORS গেটওয়ে খোলা
+CORS(app, resources={r"/api/*": {"origins": ["*"]}})
 
-# --- CONFIGURATION ---
+# --- ২. কনফিগারেশন ---
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 hf_client = InferenceClient(api_key=os.environ.get("HF_TOKEN"))
+
+# হেল্পার ফাংশন: টেক্সট থেকে পিডিএফ তৈরি
+def text_to_pdf_blob(text_content):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=11)
+    for line in text_content.split('\n'):
+        clean = line.encode('ascii', 'ignore').decode('ascii')
+        pdf.multi_cell(0, 10, text=clean)
+    out = io.BytesIO(pdf.output())
+    out.seek(0)
+    return out
+
+# --- ৩. এপিআই রুটস (ইউনিক ফাংশন নেম সহ) ---
 
 @app.route('/', methods=['GET'])
 def home():
@@ -42,27 +50,18 @@ def home():
 def health_check():
     return jsonify({"status": "Success", "message": "Backend is connected"}), 200
 
-# Helper: Create PDF from text
-def text_to_pdf_blob(text_content):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Helvetica", size=11)
-    for line in text_content.split('\n'):
-        clean = line.encode('ascii', 'ignore').decode('ascii')
-        pdf.multi_cell(0, 10, text=clean)
-    
-    # Use temporary file to avoid stream issues
-    temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf.output(temp_pdf.name)
-    with open(temp_pdf.name, 'rb') as f:
-        data = io.BytesIO(f.read())
-    os.unlink(temp_pdf.name) # Clean up
-    data.seek(0)
-    return data
-    
-# --- NEW TOOLS ADDED ---
+# ইউনিক নাম: 'word_to_pdf_handler' যাতে আগের কোনো নামের সাথে না মেলে
+@app.route('/api/word2pdf', methods=['POST'])
+def word_to_pdf_handler(): 
+    try:
+        file = request.files.get('files')
+        doc = Document(file)
+        text = "\n".join([p.text for p in doc.paragraphs])
+        return send_file(text_to_pdf_blob(text), mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# 1. MERGE PDF
+# মার্জ পিডিএফ টুল
 @app.route('/api/merge', methods=['POST'])
 def merge_pdfs():
     try:
@@ -72,9 +71,9 @@ def merge_pdfs():
             reader = PdfReader(file)
             for page in reader.pages: writer.add_page(page)
         out = io.BytesIO(); writer.write(out); out.seek(0)
-        return send_file(out, mimetype='application/pdf', download_name="merged.pdf")
+        return send_file(out, mimetype='application/pdf', as_attachment=True, download_name="merged.pdf")
     except Exception as e: return jsonify({"error": str(e)}), 500
-
+        
 # 2. JPG TO PDF
 @app.route('/api/jpg2pdf', methods=['POST'])
 def jpg_to_pdf():
@@ -138,29 +137,6 @@ def repair_pdf():
         for page in reader.pages: writer.add_page(page)
         out = io.BytesIO(); writer.write(out); out.seek(0)
         return send_file(out, mimetype='application/pdf')
-    except Exception as e: return jsonify({"error": str(e)}), 500
-
-# --- 1. NEW: WEBPAGE TO PDF ---
-@app.route('/api/word2pdf', methods=['POST'])
-def word_to_pdf():
-    try:
-        if 'files' not in request.files: return jsonify({"error": "No file uploaded"}), 400
-        file = request.files.get('files')
-        doc = Document(file)
-        text = "\n".join([p.text for p in doc.paragraphs])
-        return send_file(text_to_pdf_blob(text), mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
-    except Exception as e: 
-        print(f"Error: {str(e)}")
-        return jsonify({"error": f"Backend Error: {str(e)}"}), 500
-
-# --- 2. OFFICE TO PDF (Word, Excel, PPT) ---
-@app.route('/api/word2pdf', methods=['POST'])
-def word_to_pdf():
-    try:
-        file = request.files.get('files')
-        doc = Document(file)
-        text = "\n".join([p.text for p in doc.paragraphs])
-        return send_file(text_to_pdf_blob(text), mimetype='application/pdf')
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/api/excel2pdf', methods=['POST'])
