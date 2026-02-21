@@ -16,6 +16,17 @@ from huggingface_hub import InferenceClient
 # --- ১. অ্যাপ ইনিশিয়ালাইজেশন (শুধুমাত্র একবার!) ---
 app = Flask(__name__)
 
+import shutil # এটি ইম্পোর্ট লিস্টে যোগ করুন
+
+# --- RECTIFICATION START: System Binary Paths ---
+# ১. PDF ইঞ্জিন পাথ (Word to PDF এর জন্য)
+WKHTMLTOPDF_PATH = shutil.which("wkhtmltopdf") or '/usr/bin/wkhtmltopdf'
+pdf_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+
+# ২. OCR ইঞ্জিন পাথ (Image to Text এর জন্য)
+pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract") or '/usr/bin/tesseract'
+# --- RECTIFICATION END ---
+
 # টেম্পোরারি ফোল্ডার তৈরি
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -54,12 +65,28 @@ def health_check():
 @app.route('/api/word2pdf', methods=['POST'])
 def word_to_pdf_handler(): 
     try:
-        file = request.files.get('files')
+        # সংশোধন: 'files' বা 'file' উভয় কি (key) চেক করা হচ্ছে
+        file = request.files.get('files') or request.files.get('file')
+        
+        if not file:
+            return jsonify({"error": "No file detected in request"}), 400
+
         doc = Document(file)
         text = "\n".join([p.text for p in doc.paragraphs])
-        return send_file(text_to_pdf_blob(text), mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
+        
+        # text_to_pdf_blob কল করা হচ্ছে
+        pdf_stream = text_to_pdf_blob(text)
+        
+        return send_file(
+            pdf_stream, 
+            mimetype='application/pdf', 
+            as_attachment=True, 
+            download_name="built-theory-converted.pdf"
+        )
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # এটি আপনাকে হাগিং ফেস লগ-এ আসল সমস্যাটি দেখাবে
+        print(f"DEBUG: {str(e)}") 
+        return jsonify({"error": f"Backend Error: {str(e)}"}), 500
 
 # মার্জ পিডিএফ টুল
 @app.route('/api/merge', methods=['POST'])
