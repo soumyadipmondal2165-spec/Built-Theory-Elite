@@ -12,44 +12,35 @@ from pdf2docx import Converter
 from pypdf import PdfReader, PdfWriter
 import google.generativeai as genai
 from huggingface_hub import InferenceClient
-import os
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 
-# Initialize the app
+# --- 1. INITIALIZATION (Only Once!) ---
 app = Flask(__name__)
 
-# Apply CORS with perfect vertical alignment
+# Folder creation for temporary files to prevent Error 500
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Global CORS Policy
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["*"],  # This opens the gate for testing
+        "origins": ["*"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     }
 })
 
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({"status": "success", "message": "Built Theory API is running globally"})
-    
-# 3. HEALTH ROUTE: This makes your test link work
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({"status": "Success", "message": "Backend is connected"}), 200
-
-# @app.route('/api/word-to-pdf', methods=['POST'])
-def word_to_pdf_tool(): # Changed name here
-    # ... logic ...
-    return send_file(...)
-
-@app.route('/api/another-tool', methods=['POST'])
-def another_tool(): # Make sure this name is unique too
-    # ... logic ...
-    return jsonify(...)
-
 # --- CONFIGURATION ---
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 hf_client = InferenceClient(api_key=os.environ.get("HF_TOKEN"))
+
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"status": "success", "message": "Built Theory API is running globally"})
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "Success", "message": "Backend is connected"}), 200
 
 # Helper: Create PDF from text
 def text_to_pdf_blob(text_content):
@@ -59,9 +50,16 @@ def text_to_pdf_blob(text_content):
     for line in text_content.split('\n'):
         clean = line.encode('ascii', 'ignore').decode('ascii')
         pdf.multi_cell(0, 10, text=clean)
-    out = io.BytesIO(pdf.output()); out.seek(0)
-    return out
-
+    
+    # Use temporary file to avoid stream issues
+    temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    pdf.output(temp_pdf.name)
+    with open(temp_pdf.name, 'rb') as f:
+        data = io.BytesIO(f.read())
+    os.unlink(temp_pdf.name) # Clean up
+    data.seek(0)
+    return data
+    
 # --- NEW TOOLS ADDED ---
 
 # 1. MERGE PDF
@@ -143,16 +141,17 @@ def repair_pdf():
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 # --- 1. NEW: WEBPAGE TO PDF ---
-@app.route('/api/web2pdf', methods=['POST'])
-def web_to_pdf():
+@app.route('/api/word2pdf', methods=['POST'])
+def word_to_pdf():
     try:
-        url = request.form.get('url')
-        if not url: return jsonify({"error": "URL is required"}), 400
-        
-        # Converts URL to PDF using pdfkit
-        pdf_bytes = pdfkit.from_url(url, False)
-        return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf', as_attachment=True, download_name="webpage.pdf")
-    except Exception as e: return jsonify({"error": str(e)}), 500
+        if 'files' not in request.files: return jsonify({"error": "No file uploaded"}), 400
+        file = request.files.get('files')
+        doc = Document(file)
+        text = "\n".join([p.text for p in doc.paragraphs])
+        return send_file(text_to_pdf_blob(text), mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
+    except Exception as e: 
+        print(f"Error: {str(e)}")
+        return jsonify({"error": f"Backend Error: {str(e)}"}), 500
 
 # --- 2. OFFICE TO PDF (Word, Excel, PPT) ---
 @app.route('/api/word2pdf', methods=['POST'])
