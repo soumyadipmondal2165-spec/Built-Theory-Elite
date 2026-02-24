@@ -5,9 +5,9 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import ToolGrid from './components/ToolGrid';
 import Workspace from './components/Workspace';
+import Footer from './components/Footer';
 import { TOOLS } from './constants';
 import { Tool, User } from './types';
-import Footer from './components/Footer';
 
 // Firebase Config
 const firebaseConfig = {
@@ -120,10 +120,12 @@ const App: React.FC = () => {
         scrollToTools={scrollToTools}
       />
       
-<main>
+      <main>
         <Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />
         <ToolGrid tools={TOOLS} onSelectTool={handleSelectTool} />
       </main>
+
+      <Footer />
 
       {activeTool && (
         <Workspace 
@@ -134,7 +136,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Pricing and Pro popups go here as per your previous code... */}
+      {/* Pro Tool Notification Popup */}
       {proToolAttempt && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]">
             <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative text-center border-4 border-white ring-4 ring-yellow-400/30">
@@ -218,15 +220,12 @@ const App: React.FC = () => {
           </div>
       )}
 
-      {/* FIXED FOOTER SECTION */}
       <footer className="bg-white border-t border-gray-200 py-12 mt-12">
         <div className="max-w-7xl mx-auto px-6 text-center">
             <p className="text-primary font-bold text-lg mb-2">Built-Theory PRO</p>
             <p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} All Engineering Tools Reserved.</p>
         </div>
-      </footer> {/* <--- You were missing this closing tag! */}
-
-      <Footer /> {/* This is your custom professional footer component */}
+      </footer>
     </div>
   );
 };

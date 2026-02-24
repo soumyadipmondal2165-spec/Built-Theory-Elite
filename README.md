@@ -1,27 +1,20 @@
----
-title: Built-Theory-Pro
-emoji: 🏗️
-colorFrom: red
-colorTo: gray
-sdk: docker
-app_port: 7860
-app_file: main.py
----
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-# 🏗️ Built Theory: Global AI Suite for Civil Engineering
+# Run and deploy your AI Studio app
 
-**Built Theory** is a professional digital ecosystem designed for Civil Engineering students and industry professionals. This platform provides specialized AI-powered tools to streamline technical documentation, structural analysis workflows, and academic productivity on a global scale.
+This contains everything you need to run your app locally.
 
-**View the app in AI Studio:** [Click here](https://ai.studio/apps/drive/1Ui6q1QRsz4LRBBNnYW9sEaqW9lL5l_jT)
+View your app in AI Studio: https://ai.studio/apps/639f138a-c06e-4f8f-8dad-36c9b1202913
 
----
+## Run Locally
 
-## 🚀 Run Locally
+**Prerequisites:**  Node.js
 
-To run the **Built Theory** suite on your local machine, follow these steps:
 
-**Prerequisites:** Ensure Node.js is installed on your system.
-
-1. **Install dependencies:**
-   ```bash
-   npm install
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
