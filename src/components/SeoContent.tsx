@@ -6,7 +6,7 @@ const SeoContent: React.FC = () => {
       <div className="max-w-5xl mx-auto px-6 text-gray-700 font-sans leading-relaxed">
         
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-black text-dark mb-4">Advanced PDF Tools for Civil Engineers and Professionals</h2>
+          <h2 className="text-3xl font-black text-dark mb-4">Advanced PDF Tools for Students and Professionals</h2>
           <p className="text-lg text-gray-500 max-w-3xl mx-auto">
             Built-Theory is an elite document processing engine designed specifically for the heavy workflows of modern engineering and academic research. Experience 100% client-side processing, ensuring your sensitive blueprints, load calculations, and technical documents never leave your device.
           </p>
