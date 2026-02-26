@@ -1,24 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'; // লিঙ্কগুলো সচল করতে এটি প্রয়োজন
 import App from './App';
-import './index.css'; // আপনার সাইটের লেআউট এবং কালার ঠিক রাখতে এটি নিশ্চিত করুন
+import './index.css'; 
 
+// Engineering Error Logic: Ensuring the DOM is ready
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  // ইঞ্জিনিয়ারিং এরর লজিক
   console.error("CRITICAL: Root element '#root' not found in index.html.");
-  throw new Error("Could not find root element to mount to");
+  throw new Error("Could not find root element to mount the Built-Theory engine.");
 }
 
 const root = ReactDOM.createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    {/* BrowserRouter যুক্ত করা হয়েছে যাতে আপনার এলিট ফুটারের লিঙ্কগুলো কাজ করে */}
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    {/* NOTE: We removed <BrowserRouter> from here. 
+        It is now handled inside App.tsx to resolve the 'Double Router' conflict.
+    */}
+    <App />
   </React.StrictMode>
 );
