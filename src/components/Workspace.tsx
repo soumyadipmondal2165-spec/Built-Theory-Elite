@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PDFDocument } from 'pdf-lib'; // Added for local high-speed processing
-import { Tool, User } from '../../types';
+import { PDFDocument } from 'pdf-lib';
+import JSZip from 'jszip';
+import { Tool, User } from '../types';
 import { processTool } from '../services/apiService';
 
 interface WorkspaceProps {
@@ -17,13 +18,13 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
   const [step, setStep] = useState<'upload' | 'config' | 'processing' | 'done'>('upload');
   const [options, setOptions] = useState<Record<string, any>>({});
   
+  // URL storage for the Success screen download button
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [finalFileName, setFinalFileName] = useState<string>('document.pdf');
+
   // Progress States
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingProgress, setProcessingProgress] = useState(0);
-
-  // FIXED: These states save the file so the final download button actually works
-  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
-  const [resultFileName, setResultFileName] = useState("");
 
   // Specific state for signature
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,41 +36,29 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
   ]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const FILE_SIZE_LIMIT_FREE = 50 * 1024 * 1024; // 50MB
+
+  const FILE_SIZE_LIMIT_FREE = 35 * 1024 * 1024; // 35MB
   const FILE_SIZE_LIMIT_PRO = 10 * 1024 * 1024 * 1024; // 10GB
 
-  // Initialize defaults
   useEffect(() => {
     setFiles([]);
     setOptions({});
-    setResultBlob(null);
-    setResultFileName("");
     setMockPages([{id: 1, rot: 0}, {id: 2, rot: 0}, {id: 3, rot: 0}, {id: 4, rot: 0}]);
     setUploadProgress(0);
     setProcessingProgress(0);
     
+    // Cleanup memory from previous downloads
+    if (downloadUrl) {
+      window.URL.revokeObjectURL(downloadUrl);
+      setDownloadUrl(null);
+    }
+
     if (['ppt_gen', 'html2pdf'].includes(tool.id)) {
       setStep('config');
     } else {
       setStep('upload');
     }
   }, [tool]);
-
-  // RECTIFIED: Trigger Download without immediate revocation (Fixes 100b error)
-  const triggerDownload = (blob: Blob, name: string) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Give the browser 2 seconds to finish the download before cleaning up
-    setTimeout(() => {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    }, 2000);
-  };
 
   const getAcceptType = () => {
     switch (tool.id) {
@@ -85,9 +74,11 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
   const checkTopicLimit = () => {
       if (user?.isPremium) return true;
       if (tool.id !== 'ppt_gen') return true;
+
       const usageStr = localStorage.getItem('ppt_usage');
       const now = new Date();
       const currentMonth = `${now.getFullYear()}-${now.getMonth()}`;
+      
       let usage = { month: currentMonth, count: 0 };
       if (usageStr) {
           try {
@@ -139,7 +130,6 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
           ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
       }
   };
-
   const draw = (e: React.MouseEvent) => {
       if (!isDrawing) return;
       const canvas = canvasRef.current;
@@ -150,7 +140,6 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
           ctx.stroke();
       }
   };
-
   const stopDrawing = () => setIsDrawing(false);
   const clearSignature = () => {
       const canvas = canvasRef.current;
@@ -179,10 +168,10 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
 
   const validateFiles = (filesToCheck: File[]) => {
       const limit = user?.isPremium ? FILE_SIZE_LIMIT_PRO : FILE_SIZE_LIMIT_FREE;
-      const limitLabel = user?.isPremium ? '10GB' : '50MB';
+      const limitLabel = user?.isPremium ? '10GB' : '35MB';
       for (const f of filesToCheck) {
           if (f.size > limit) {
-              if (window.confirm(`File ${f.name} exceeds ${limitLabel}. Upgrade?`)) {
+              if (window.confirm(`File ${f.name} exceeds the ${limitLabel} limit.\n${!user?.isPremium ? 'Upgrade to Pro for 10GB limits?' : ''}`)) {
                   if (!user?.isPremium) onJoinPro();
               }
               return false;
@@ -193,32 +182,65 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
 
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
-  
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFiles = Array.from(e.dataTransfer.files) as File[];
+      if (tool.id === 'merge' && !user?.isPremium && (files.length + droppedFiles.length) > 10) {
+        if(window.confirm("Free limit reached: Max 10 files for Merge.\nUpgrade to Pro for unlimited merging?")) onJoinPro();
+        return;
+      }
       if (!validateFiles(droppedFiles)) return;
-      if (step === 'upload') simulateUpload(droppedFiles);
-      else setFiles((prev) => [...prev, ...droppedFiles]);
+      if (tool.id === 'compare') {
+          setFiles((prev) => [...prev, ...droppedFiles]);
+      } else {
+          if (step === 'upload') simulateUpload(droppedFiles);
+          else setFiles((prev) => [...prev, ...droppedFiles]);
+      }
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files) as File[];
-      if (!validateFiles(selectedFiles)) return;
-      if (step === 'upload') simulateUpload(selectedFiles);
-      else setFiles((prev) => [...prev, ...selectedFiles]);
+      if (tool.id === 'merge' && !user?.isPremium && (files.length + selectedFiles.length) > 10) {
+        if(window.confirm("Free limit reached: Max 10 files for Merge.\nUpgrade to Pro for unlimited merging?")) onJoinPro();
+        e.target.value = '';
+        return;
+      }
+      if (!validateFiles(selectedFiles)) { e.target.value = ''; return; }
+      if (tool.id === 'compare') setFiles((prev) => [...prev, ...selectedFiles]);
+      else {
+           if (step === 'upload') simulateUpload(selectedFiles);
+           else setFiles((prev) => [...prev, ...selectedFiles]);
+      }
     }
     e.target.value = '';
   };
 
-// RECTIFIED: Main Processing Engine
+  // HELPER: Parses "1-5, 8" into a 0-indexed array for the Split Engine
+  const parseRange = (rangeStr: string, maxPages: number): number[] => {
+    const pages = new Set<number>();
+    const groups = rangeStr.split(',');
+    groups.forEach(group => {
+      const parts = group.trim().split('-');
+      if (parts.length === 2) {
+        const start = Math.max(1, parseInt(parts[0]));
+        const end = Math.min(maxPages, parseInt(parts[1]));
+        for (let i = start; i <= end; i++) pages.add(i - 1);
+      } else {
+        const val = parseInt(group.trim());
+        if (!isNaN(val) && val >= 1 && val <= maxPages) pages.add(val - 1);
+      }
+    });
+    return Array.from(pages).sort((a, b) => a - b);
+  };
+
+  // THE FULLY INTEGRATED PROCESSING ENGINE
   const executeProcess = async () => {
     if (tool.id === 'ppt_gen' && !checkTopicLimit()) {
-        if(window.confirm("Free limit reached. Upgrade to Pro?")) onJoinPro();
+        if(window.confirm("You have reached your free monthly limit (5 PPTs).\nUpgrade to Pro for unlimited access?")) onJoinPro();
         return;
     }
 
@@ -235,10 +257,11 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
         setProcessingProgress(prev => (prev >= 95 ? 95 : prev + 2));
     }, 100);
 
-    try { // <--- শুধুমাত্র একটি 'try' থাকবে
+    try {
       let finalBlob: Blob;
+      let ext = 'pdf';
 
-      // 1. LOCAL MERGE ENGINE
+      // --- LOCAL ENGINE: MERGE ---
       if (tool.id === 'merge') {
           const mergedPdf = await PDFDocument.create();
           for (const file of files) {
@@ -249,29 +272,50 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
           }
           const pdfBytes = await mergedPdf.save();
           finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-      } 
-      // 2. LOCAL JPG/PNG TO PDF ENGINE
+      }
+      // --- LOCAL ENGINE: IMAGE TO PDF ---
       else if (tool.id === 'img2pdf') {
           const pdfDoc = await PDFDocument.create();
           for (const file of files) {
               const imageBytes = await file.arrayBuffer();
-              let image;
-              if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
-                  image = await pdfDoc.embedPng(imageBytes);
-              } else {
-                  image = await pdfDoc.embedJpg(imageBytes);
-              }
+              const image = file.type === 'image/png' ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
               const page = pdfDoc.addPage([image.width, image.height]);
               page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
           }
           const pdfBytes = await pdfDoc.save();
           finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       }
-      // 3. REMOTE API
+      // --- LOCAL ENGINE: SPLIT (WITH RANGE FIX & ZIP) ---
+      else if (tool.id === 'split') {
+          const file = files[0];
+          const bytes = await file.arrayBuffer();
+          const srcPdf = await PDFDocument.load(bytes);
+          const totalPages = srcPdf.getPageCount();
+
+          if (options.mode !== 'all') {
+              const pagesToExtract = parseRange(options.pages || "1", totalPages);
+              const newPdf = await PDFDocument.create();
+              const copiedPages = await newPdf.copyPages(srcPdf, pagesToExtract);
+              copiedPages.forEach(p => newPdf.addPage(p));
+              const pdfBytes = await newPdf.save();
+              finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+          } else {
+              const zip = new JSZip();
+              for (let i = 0; i < totalPages; i++) {
+                  const singlePdf = await PDFDocument.create();
+                  const [copiedPage] = await singlePdf.copyPages(srcPdf, [i]);
+                  singlePdf.addPage(copiedPage);
+                  const pdfBytes = await singlePdf.save();
+                  zip.file(`Page_${i + 1}.pdf`, pdfBytes);
+              }
+              finalBlob = await zip.generateAsync({ type: "blob" });
+              ext = 'zip';
+          }
+      }
+      // --- REMOTE ENGINE: API FALLBACK ---
       else {
           const formData = new FormData();
-          files.forEach(f => formData.append('files', f));
-          if (files.length > 0) formData.append('file', files[0]);
+          files.forEach(f => formData.append('file', f)); 
           Object.keys(options).forEach(key => formData.append(key, options[key]));
 
           if (tool.id === 'sign' && canvasRef.current) {
@@ -283,47 +327,50 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                });
           }
 
-          const blob = await processTool(tool.id, formData);
-          if (blob.size < 500) {
-              const text = await blob.text();
-              throw new Error("The server failed to create a valid file.");
-          }
-          finalBlob = blob;
+          finalBlob = await processTool(tool.id, formData);
+          
+          if (tool.id === 'ppt_gen' || tool.id === 'pdf2ppt') ext = 'pptx';
+          if (tool.id === 'pdf2word') ext = 'docx';
+          if (tool.id === 'pdf2excel') ext = 'xlsx';
+          if (tool.id === 'pdf2jpg' || tool.id === 'extract') ext = 'zip'; 
       }
 
-      // Final cleanup and download logic
       clearInterval(progressInterval);
       setProcessingProgress(100);
       if (tool.id === 'ppt_gen') incrementTopicLimit();
 
-      let ext = 'pdf';
-      if (tool.id === 'ppt_gen' || tool.id === 'pdf2ppt') ext = 'pptx';
-      if (tool.id === 'pdf2word') ext = 'docx';
-      if (tool.id === 'pdf2excel') ext = 'xlsx';
-      if (tool.id === 'pdf2jpg') ext = 'zip'; 
+      const url = window.URL.createObjectURL(finalBlob);
+      setDownloadUrl(url); 
       
       const fileName = `BuiltTheory_${tool.id}_Result.${ext}`;
-      setResultBlob(finalBlob);
-      setResultFileName(fileName);
-      triggerDownload(finalBlob, fileName);
+      setFinalFileName(fileName);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      
       setTimeout(() => setStep('done'), 500);
-
-    } catch (e) {
+    } catch (e: any) {
       clearInterval(progressInterval);
-      alert(e instanceof Error ? e.message : "Processing failed.");
+      alert(e.message || "Error processing file. Please try again.");
+      if (e.message?.includes("Pro Upgrade")) onJoinPro();
       setStep('config');
     } finally {
       setProcessing(false);
     }
   };
   // --- UI COMPONENTS ---
+  // Specific UI implementations for each tool to ensure separation.
 
   const renderMergeUI = () => (
     <div className="flex flex-col md:flex-row gap-6 w-full max-w-4xl h-full p-4">
       <div className="w-full md:w-1/3 border border-gray-200 rounded-xl p-4 bg-white flex flex-col shadow-sm">
          <div className="flex justify-between items-center mb-4">
              <h3 className="font-bold text-gray-700">File Order</h3>
-             <button onClick={() => fileInputRef.current?.click()} className="text-sm font-bold text-primary hover:underline">+ Add Files</button>
+             <button onClick={() => fileInputRef.current?.click()} className={`text-sm font-bold text-primary hover:underline`}>+ Add Files</button>
          </div>
          <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
             {files.map((f, i) => (
@@ -363,6 +410,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
             <div className="mb-6 animate-[fadeIn_0.2s]">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Page Ranges</label>
                 <input type="text" className="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono" placeholder="e.g. 1-5, 8, 10-12" onChange={(e) => setOptions({...options, pages: e.target.value})} />
+                <p className="text-[10px] text-gray-400 mt-2 italic">*Use commas for separate pages and dashes for ranges.</p>
             </div>
         )}
         <button onClick={executeProcess} className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-red-600 transition-colors shadow-lg">Split PDF</button>
@@ -466,7 +514,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                      <span className="text-3xl font-black text-gray-900 opacity-20 select-none whitespace-nowrap">{options.text || "WATERMARK"}</span>
                  </div>
                  <div className="text-[6px] text-gray-300 p-4 text-justify leading-tight">
-                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+                     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                     Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                  </div>
              </div>
           </div>
@@ -495,12 +544,12 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
              <h3 className="font-bold text-lg text-gray-800 mb-2">Presentation Details</h3>
              <div>
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Topic</label>
-                <input type="text" className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none transition-all" placeholder="e.g. Waffle Roof Technology " onChange={(e) => setOptions({...options, topic: e.target.value})} />
+                <input type="text" className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-purple-200 outline-none transition-all" placeholder="e.g. Sustainable Energy Future" onChange={(e) => setOptions({...options, topic: e.target.value})} />
              </div>
              <div>
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Target Audience</label>
                 <select className="w-full border border-gray-200 p-3 rounded-xl bg-white outline-none" onChange={(e) => setOptions({...options, audience: e.target.value})}>
-                    <option>University Students </option>
+                    <option>University Students</option>
                     <option>Corporate Professionals</option>
                     <option>General Public</option>
                     <option>Investors</option>
@@ -516,7 +565,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                 <i className="fas fa-wand-magic-sparkles text-blue-600"></i>
                 <h4 className="font-bold text-blue-900">AI Power</h4>
             </div>
-            <p className="text-xs text-blue-700 mb-4 leading-relaxed">Our AI will research the topic and generate a complete slide deck with structured content. </p>
+            <p className="text-xs text-blue-700 mb-4 leading-relaxed">Our AI will research the topic and generate a complete slide deck with structured content.</p>
             <ul className="text-xs text-blue-800 space-y-2 mb-6">
                 <li className="flex items-center gap-2"><i className="fas fa-check-circle text-blue-500"></i> Smart Outline</li>
                 <li className="flex items-center gap-2"><i className="fas fa-check-circle text-blue-500"></i> Key Points</li>
@@ -533,7 +582,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
               <i className="fas fa-globe text-4xl text-purple-500"></i>
           </div>
           <h3 className="text-xl font-bold mb-2 text-gray-800">Capture Webpage</h3>
-          <p className="text-gray-500 mb-8 text-sm">Convert any public URL into a high-quality PDF document. </p>
+          <p className="text-gray-500 mb-8 text-sm">Convert any public URL into a high-quality PDF document.</p>
           <div className="relative mb-6">
               <i className="fas fa-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
               <input type="url" placeholder="https://www.example.com" className="w-full border border-gray-200 rounded-xl p-3 pl-10 focus:ring-2 focus:ring-purple-200 outline-none" onChange={(e) => setOptions({...options, url: e.target.value})} />
@@ -548,7 +597,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
               <i className="fas fa-camera text-3xl text-white"></i>
           </div>
           <h3 className="text-xl font-bold mb-2">Enhance Scan</h3>
-          <p className="text-gray-500 mb-6 text-sm">We will clean up the image, fix perspective, and increase contrast. </p>
+          <p className="text-gray-500 mb-6 text-sm">We will clean up the image, fix perspective, and increase contrast.</p>
           <div className="flex justify-center gap-4 mb-8">
               <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="accent-dark w-5 h-5" defaultChecked onChange={(e) => setOptions({...options, grayscale: e.target.checked})} />
@@ -577,7 +626,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
               </div>
           </div>
           <h3 className="text-xl font-bold mb-2 text-gray-800">{title}</h3>
-          <p className="text-gray-500 mb-8 text-sm">{desc} </p>
+          <p className="text-gray-500 mb-8 text-sm">{desc}</p>
           <button onClick={executeProcess} className={`w-full bg-primary text-white py-3.5 rounded-xl font-bold shadow-lg shadow-red-100 hover:bg-red-600 hover:-translate-y-0.5 transition-all`}>
               Start Conversion
           </button>
@@ -588,7 +637,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
       <div className="text-center p-8 w-full max-w-lg bg-white rounded-2xl shadow-sm border border-gray-100">
           <i className="fas fa-search text-4xl text-blue-500 mb-4"></i>
           <h3 className="text-xl font-bold mb-2">OCR Text Recognition</h3>
-          <p className="text-gray-500 mb-6 text-sm">Make your scanned PDF searchable and selectable. </p>
+          <p className="text-gray-500 mb-6 text-sm">Make your scanned PDF searchable and selectable.</p>
           <div className="text-left mb-6">
               <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Document Language</label>
               <select className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 focus:bg-white transition-colors outline-none" onChange={(e) => setOptions({...options, lang: e.target.value})}>
@@ -609,7 +658,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
             <i className="fas fa-not-equal text-3xl text-orange-500"></i>
         </div>
         <h3 className="font-bold text-xl mb-2 text-gray-800">Compare Documents</h3>
-        <p className="text-gray-500 mb-8 text-sm">We will analyze <b>{files[0]?.name}</b> vs <b>{files[1]?.name}</b> and highlight every difference. </p>
+        <p className="text-gray-500 mb-8 text-sm">We will analyze <b>{files[0]?.name}</b> vs <b>{files[1]?.name}</b> and highlight every difference.</p>
         <button onClick={executeProcess} className="w-full bg-orange-500 text-white px-8 py-3.5 rounded-xl font-bold shadow-lg shadow-orange-200 hover:bg-orange-600 transition-all">Run Comparison</button>
     </div>
   );
@@ -620,13 +669,14 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
             <i className="fas fa-hammer text-2xl text-green-600"></i>
           </div>
           <h3 className="text-xl font-bold mb-2 text-gray-800">Repair Corrupt PDF</h3>
-          <p className="text-gray-500 mb-6 text-sm">Attempt to recover data from a damaged or unreadable PDF file. </p>
+          <p className="text-gray-500 mb-6 text-sm">Attempt to recover data from a damaged or unreadable PDF file.</p>
           <button onClick={executeProcess} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 transition-colors">Start Recovery</button>
       </div>
   );
 
   const renderConfig = () => {
     switch (tool.id) {
+        // Organize Category
         case 'merge': return renderMergeUI();
         case 'split': return renderSplitUI();
         case 'compress': return renderCompressUI();
@@ -637,6 +687,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
         case 'compare': return renderComparisonUI();
         case 'repair': return renderRepairUI();
         case 'ocr': return renderOcrUI();
+
+        // Converters
         case 'img2pdf': return renderConverterUI('fa-file-pdf', 'Images to PDF', 'Convert JPG, PNG, WEBP to a single PDF.', 'text-red-500');
         case 'pdf2jpg': return renderConverterUI('fa-image', 'PDF to JPG', 'Extract pages as high-quality images.', 'text-yellow-500');
         case 'word2pdf': return renderConverterUI('fa-file-pdf', 'Word to PDF', 'Convert DOC/DOCX documents to PDF.', 'text-blue-600');
@@ -647,6 +699,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
         case 'pdf2ppt': return renderConverterUI('fa-file-powerpoint', 'PDF to PowerPoint', 'Convert PDF pages to PPTX slides.', 'text-orange-500');
         case 'html2pdf': return renderHTML2PDF();
         case 'pdf2pdfa': return renderConverterUI('fa-archive', 'PDF to PDF/A', 'Convert to ISO-standard for long-term archiving.', 'text-purple-600');
+
+        // Security Category
         case 'protect': return renderSecurityUI('protect');
         case 'unlock': return renderSecurityUI('unlock');
         case 'watermark': return renderWatermarkUI();
@@ -654,10 +708,13 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
         case 'redact': return renderConverterUI('fa-eye-slash', 'Redact PDF', 'Black out sensitive text and images permanently.', 'text-gray-800');
         case 'pagenum': return renderConverterUI('fa-hashtag', 'Page Numbers', 'Add pagination to header or footer.', 'text-gray-600');
         case 'edit': return renderConverterUI('fa-pen-to-square', 'Edit PDF', 'Add text, shapes and annotations.', 'text-indigo-500');
+        
+        // Academic
         case 'ppt_gen': return renderPPTGenUI();
+
         default: return (
              <div className="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-100">
-                 <p className="mb-4 text-gray-500">Standard processing for {tool.title} </p>
+                 <p className="mb-4 text-gray-500">Standard processing for {tool.title}</p>
                  <button onClick={executeProcess} className="bg-primary text-white px-8 py-2 rounded-lg font-bold">Process File</button>
              </div>
         );
@@ -675,8 +732,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                     <i className={`fas ${tool.icon}`}></i>
                 </div>
                 <div>
-                    <h2 className="font-extrabold text-xl text-gray-800 tracking-tight">{tool.title} </h2>
-                    <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Built-Theory Engine </p>
+                    <h2 className="font-extrabold text-xl text-gray-800 tracking-tight">{tool.title}</h2>
+                    <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Built-Theory Engine</p>
                 </div>
             </div>
             <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-800 transition-all">
@@ -703,7 +760,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300 ${isActive ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-gray-300 text-gray-400'}`}>
                                       {isActive && idx < currentIdx ? <i className="fas fa-check"></i> : idx + 1}
                                   </div>
-                                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-primary' : 'text-gray-400'}`}>{s.label} </span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-primary' : 'text-gray-400'}`}>{s.label}</span>
                               </div>
                           );
                       })}
@@ -719,7 +776,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                               <div key={idx} className="border-2 border-dashed border-gray-300 rounded-3xl p-10 text-center hover:bg-white hover:border-primary transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
                                   <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold shadow-sm ${idx === 0 ? 'bg-blue-50 text-blue-500' : 'bg-red-50 text-red-500'}`}>{idx + 1}</div>
                                   <p className="font-bold text-gray-700 group-hover:text-primary transition-colors">{files[idx] ? files[idx].name : `Upload File ${idx === 0 ? 'A' : 'B'}`}</p>
-                                  <p className="text-xs text-gray-400 mt-2">PDF Document </p>
+                                  <p className="text-xs text-gray-400 mt-2">PDF Document</p>
                               </div>
                           ))}
                           <div className="md:col-span-2 text-center">
@@ -737,17 +794,17 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                                     {Math.round(uploadProgress)}%
                                     <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e33b2f" strokeWidth="4" strokeDasharray="283" strokeDashoffset={283 - (283 * uploadProgress) / 100} className="transition-all duration-75 ease-linear" /></svg>
                                 </div>
-                                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Uploading... </p>
+                                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Uploading...</p>
                            </div>
                        ) : (
                            <>
                                 <div className="w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-8 text-primary text-4xl shadow-inner group-hover:scale-110 transition-transform duration-300">
                                     <i className={`fas ${tool.icon}`}></i>
                                 </div>
-                                <h3 className="text-3xl font-bold text-gray-800 mb-3 group-hover:text-primary transition-colors">Drop files here </h3>
-                                <p className="text-gray-400 mb-8 font-medium">or click to browse from device </p>
+                                <h3 className="text-3xl font-bold text-gray-800 mb-3 group-hover:text-primary transition-colors">Drop files here</h3>
+                                <p className="text-gray-400 mb-8 font-medium">or click to browse from device</p>
                                 <span className={`inline-block px-4 py-2 rounded-lg text-xs font-bold tracking-wide uppercase ${user?.isPremium ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-gray-100 text-gray-500'}`}>
-                                    {user?.isPremium ? 'PRO LIMIT: 10GB' : 'FREE LIMIT: 50MB'} 
+                                    {user?.isPremium ? 'PRO LIMIT: 10GB' : 'FREE LIMIT: 35MB'}
                                 </span>
                            </>
                        )}
@@ -764,33 +821,35 @@ const Workspace: React.FC<WorkspaceProps> = ({ tool, user, onClose, onJoinPro })
                             <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                             <i className="fas fa-cog text-gray-300 text-2xl animate-pulse"></i>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-3">Processing... </h3>
-                        <p className="text-gray-400 text-sm mb-6">Our AI engine is analyzing your document. </p>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-3">Processing...</h3>
+                        <p className="text-gray-400 text-sm mb-6">Our AI engine is analyzing your document.</p>
                         <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
                              <div className="h-full bg-primary transition-all duration-300 ease-out" style={{width: `${processingProgress}%`}}></div>
                         </div>
-                        <div className="mt-2 text-right text-xs font-bold text-primary">{Math.round(processingProgress)}% </div>
+                        <div className="mt-2 text-right text-xs font-bold text-primary">{Math.round(processingProgress)}%</div>
                     </div>
                 )}
 
+                {/* THE FIXED DOWNLOAD BUTTON */}
                 {step === 'done' && (
                     <div className="text-center animate-[scaleIn_0.3s_ease-out] bg-white p-12 rounded-3xl shadow-xl border border-gray-100 max-w-md w-full relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-green-600"></div>
                         <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 text-4xl shadow-inner ring-4 ring-green-50">
                             <i className="fas fa-check"></i>
                         </div>
-                        <h3 className="text-3xl font-bold text-gray-800 mb-2">Success! </h3>
-                        <p className="text-gray-500 mb-10">Your file is ready for download. </p>
+                        <h3 className="text-3xl font-bold text-gray-800 mb-2">Success!</h3>
+                        <p className="text-gray-500 mb-10">Your file is ready for download.</p>
                         <div className="flex flex-col gap-4">
-                            {/* RECTIFIED: Explicitly trigger manual download from the saved resultBlob */}
-                            <button 
-                                onClick={() => resultBlob && triggerDownload(resultBlob, resultFileName)}
+                            {/* Replaced button with a working anchor tag containing the generated URL */}
+                            <a 
+                                href={downloadUrl || '#'} 
+                                download={finalFileName} 
                                 className="bg-dark text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-black transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
                             >
-                                <i className="fas fa-download"></i> Download File 
-                            </button>
+                                <i className="fas fa-download"></i> Download File
+                            </a>
                             <button onClick={() => { setStep('upload'); setFiles([]); setOptions({}); setUploadProgress(0); setProcessingProgress(0); }} className="text-gray-400 font-bold hover:text-dark py-2 text-sm uppercase tracking-wide">
-                                <i className="fas fa-redo mr-2"></i> Start Over 
+                                <i className="fas fa-redo mr-2"></i> Start Over
                             </button>
                         </div>
                     </div>
