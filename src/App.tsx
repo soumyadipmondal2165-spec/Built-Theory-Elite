@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 import About from './components/About';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
+import SeoContent from './components/SeoContent';
 
 import { TOOLS } from './constants';
 import { Tool, User } from './types';
@@ -135,12 +136,23 @@ const App: React.FC = () => {
                 <div id="tools">
                    <ToolGrid tools={TOOLS} onSelectTool={handleSelectTool} />
                 </div>
+                {/* ADDED SEO CONTENT HERE FOR ADSENSE */}
+                <SeoContent />
               </>
             } />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
-            <Route path="*" element={<Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />} />
+            <Route path="*" element={
+              <>
+                <Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />
+                <div id="tools">
+                   <ToolGrid tools={TOOLS} onSelectTool={handleSelectTool} />
+                </div>
+                {/* ADDED SEO CONTENT HERE FOR ADSENSE */}
+                <SeoContent />
+              </>
+            } />
           </Routes>
         </main>
 
