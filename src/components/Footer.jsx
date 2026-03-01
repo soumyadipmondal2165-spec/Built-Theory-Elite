@@ -16,7 +16,7 @@ const Footer = () => {
               </span>
               <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-medium">
                 The premier hub for Civil Engineering students. Bridging the gap between 
-                MAKAUT academic theory and real-world construction site reality.
+                University academic theory and real-world construction site reality.
               </p>
             </div>
             {/* Professional Social Connect */}
