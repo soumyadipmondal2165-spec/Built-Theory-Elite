@@ -3,65 +3,103 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer style={{ backgroundColor: '#0b0f19', color: '#ffffff', padding: '100px 40px 40px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Expanded Grid to 4 Columns for better AdSense Structure */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '60px', marginBottom: '80px' }}>
+    <footer className="bg-slate-900 text-white pt-24 pb-12 px-6 md:px-16 font-sans border-t border-slate-800">
+      <div className="max-w-7xl mx-auto">
+        {/* Main 4-Column Grid Structure */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
           
-          {/* Column 1: Brand section with AES-256 Badge */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
-              <div style={{ color: '#e33b2f', fontSize: '24px' }}><i className="fas fa-layer-group"></i></div>
-              <h2 style={{ fontSize: '28px', fontWeight: '900', letterSpacing: '-1.2px', margin: 0 }}>BUILT-THEORY</h2>
+          {/* Column 1: Brand Identity & Mission */}
+          <div className="lg:col-span-1">
+            <div className="flex flex-col gap-5 mb-8">
+              <span className="text-3xl font-black tracking-tighter uppercase leading-none">
+                BUILT<span className="text-blue-500">THEORY</span>
+              </span>
+              <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-medium">
+                The premier hub for Civil Engineering students. Bridging the gap between 
+                MAKAUT academic theory and real-world construction site reality.
+              </p>
             </div>
-            <p style={{ color: '#9ca3af', lineHeight: '1.8', fontSize: '15px', maxWidth: '380px', marginBottom: '35px' }}>
-              The most advanced PDF engine for the modern web. 100% Client-Side encryption optimized for heavy civil engineering workflows.
-            </p>
-            <div style={{ display: 'flex', gap: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(255,255,255,0.05)', padding: '10px 18px', borderRadius: '50px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12px', fontWeight: '800' }}>
-                <i className="fas fa-shield-check" style={{ color: '#10b981' }}></i> AES-256 SECURED
-              </div>
+            {/* Professional Social Connect */}
+            <div className="flex gap-4">
+              <a href="https://facebook.com" className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center hover:bg-blue-600 hover:-translate-y-1 transition-all duration-300">
+                <i className="fab fa-facebook-f text-sm"></i>
+              </a>
+              <a href="https://linkedin.com" className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300">
+                <i className="fab fa-linkedin-in text-sm"></i>
+              </a>
+              <a href="https://youtube.com/@built-theory" className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center hover:bg-red-600 hover:-translate-y-1 transition-all duration-300">
+                <i className="fab fa-youtube text-sm"></i>
+              </a>
             </div>
           </div>
 
-          {/* Column 2: Solutions */}
+          {/* Column 2: Educational Resources (High Value for Google) */}
           <div>
-            <h4 style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', color: '#9ca3af', letterSpacing: '2.5px', marginBottom: '35px' }}>Solutions</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: '3' }}>
-              <li><Link to="/#tools" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600', transition: 'color 0.2s' }}>COMBINE FILES</Link></li>
-              <li><Link to="/#tools" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>REDUCE SIZE</Link></li>
-              <li><Link to="/#tools" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>SEARCHABLE OCR</Link></li>
-              <li><Link to="/#tools" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>LOCK PDF</Link></li>
+            <h4 className="text-[10px] font-black uppercase tracking-[4px] text-blue-500 mb-8 opacity-80">Knowledge Hub</h4>
+            <ul className="flex flex-col gap-4 text-[13px] font-bold text-slate-300">
+              <li><Link to="/theory-lab" className="hover:text-blue-400 transition-colors">Engineering Theory Lab</Link></li>
+              <li><Link to="/student-corner" className="hover:text-blue-400 transition-colors">MAKAUT Semester Notes</Link></li>
+              <li><Link to="/#tools" className="hover:text-blue-400 transition-colors">PDF Calculation Suite</Link></li>
+              <li><Link to="/#tools" className="hover:text-blue-400 transition-colors">Structural Analysis Tools</Link></li>
             </ul>
           </div>
 
-          {/* Column 3: Company */}
+          {/* Column 3: Trust & Support (Critical for Manual Review) */}
           <div>
-            <h4 style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', color: '#9ca3af', letterSpacing: '2.5px', marginBottom: '35px' }}>Company</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: '3' }}>
-              <li><Link to="/about" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>ABOUT US</Link></li>
-              <li><Link to="/" style={{ color: '#e33b2f', textDecoration: 'none', fontSize: '14px', fontWeight: '800' }}>PRICING & PLANS</Link></li>
-              <li><Link to="/" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>DEVELOPER API</Link></li>
+            <h4 className="text-[10px] font-black uppercase tracking-[4px] text-blue-500 mb-8 opacity-80">Support Center</h4>
+            <ul className="flex flex-col gap-4 text-[13px] font-bold text-slate-300">
+              <li><Link to="/about" className="hover:text-blue-400 transition-colors">About Our Mission</Link></li>
+              <li><Link to="/contact" className="hover:text-blue-400 transition-colors">Contact Support</Link></li>
+              <li><Link to="/help-center" className="hover:text-blue-400 transition-colors">Help & Documentation</Link></li>
+              <li className="pt-2">
+                <a href="mailto:support@built-theory.com" className="text-blue-400 hover:text-blue-300 flex items-center gap-2">
+                  <i className="fas fa-envelope text-xs opacity-50"></i>
+                  support@built-theory.com
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* Column 4: Legal (CRITICAL FOR ADSENSE) */}
+          {/* Column 4: Legal Compliance & Security */}
           <div>
-            <h4 style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', color: '#9ca3af', letterSpacing: '2.5px', marginBottom: '35px' }}>Legal</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: '3' }}>
-              <li><Link to="/privacy" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>PRIVACY POLICY</Link></li>
-              <li><Link to="/terms" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>TERMS OF SERVICE</Link></li>
-              <li><Link to="/cookies" style={{ color: '#ffffff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>COOKIE POLICY</Link></li>
+            <h4 className="text-[10px] font-black uppercase tracking-[4px] text-blue-500 mb-8 opacity-80">Legal & Security</h4>
+            <ul className="flex flex-col gap-4 text-[13px] font-bold text-slate-300">
+              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy & Data Policy</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/cookies" className="hover:text-white transition-colors">Cookie Management</Link></li>
+              <li className="mt-4">
+                <div className="inline-flex items-center gap-2 bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">AES-256 Secured</span>
+                </div>
+              </li>
             </ul>
           </div>
 
         </div>
 
-        {/* Bottom Bar */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-          <p style={{ color: '#4b5563', fontSize: '13px', fontWeight: '700', margin: 0 }}>© 2026 BUILT-THEORY™ | ALL RIGHTS RESERVED.</p>
-          <div style={{ display: 'flex', gap: '15px', color: '#4b5563', fontSize: '12px', fontWeight: '800', letterSpacing: '1px' }}>
-            VERIFIED BY <span style={{ color: '#ffffff' }}>RAZORPAY</span> & <span style={{ color: '#ffffff' }}>GOOGLE GEMINI</span>
+        {/* Bottom Utility Bar */}
+        <div className="pt-12 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+          <div className="flex flex-col gap-1">
+            <p className="text-slate-500 text-[11px] font-bold tracking-tight">
+              © 2026 BUILT THEORY. ALL RIGHTS RESERVED.
+            </p>
+            <p className="text-slate-600 text-[10px] uppercase tracking-[3px] font-black">
+              Kolkata, West Bengal, India
+            </p>
+          </div>
+          
+          {/* Trust Badges */}
+          <div className="flex items-center gap-8">
+             <div className="flex items-center gap-2.5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Powered By</span>
+                <span className="text-xs font-bold text-slate-300">Advanced AI Logic</span>
+             </div>
+             <div className="h-5 w-[1px] bg-slate-800 hidden md:block opacity-50"></div>
+             <div className="flex items-center gap-2.5">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Verified By</span>
+                <span className="text-xs font-bold text-slate-300">Razorpay</span>
+             </div>
           </div>
         </div>
       </div>
