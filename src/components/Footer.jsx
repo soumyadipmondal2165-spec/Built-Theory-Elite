@@ -27,7 +27,7 @@ const Footer = () => {
               <a href="https://linkedin.com" className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300">
                 <i className="fab fa-linkedin-in text-sm"></i>
               </a>
-              <a href="https://youtube.com/@built-theory" className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center hover:bg-red-600 hover:-translate-y-1 transition-all duration-300">
+              <a href="https://youtube.com/@builttheory2165?si=s-XfZKH6QFkH8_LL" className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center hover:bg-red-600 hover:-translate-y-1 transition-all duration-300">
                 <i className="fab fa-youtube text-sm"></i>
               </a>
             </div>
