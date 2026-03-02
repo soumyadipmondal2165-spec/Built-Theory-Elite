@@ -1,23 +1,28 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Breadcrumbs from './Breadcrumbs';
-import { BLOG_POSTS } from '../data/blogData'; // We will create this file next
+import { BLOG_POSTS } from '../data/blogData';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  
-  // This finds the correct article based on the URL (e.g., /theory-lab/types-of-foundation)
-  const post = BLOG_POSTS.find((p) => p.id === slug);
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // If the link is broken or the post doesn't exist
+  const postIndex = BLOG_POSTS.findIndex((p) => p.id === slug);
+  const post = BLOG_POSTS[postIndex];
+
   if (!post) {
     return (
       <div className="pt-40 pb-20 text-center">
-        <h2 className="text-2xl font-bold text-slate-900">Article Not Found</h2>
-        <Link to="/theory-lab" className="text-blue-600 font-bold mt-4 inline-block underline">Return to Theory Lab</Link>
+        <h2 className="text-2xl font-black text-slate-900 uppercase">Theory Not Found</h2>
+        <Link to="/theory-lab" className="text-blue-600 font-bold mt-4 inline-block underline uppercase tracking-widest text-xs">Return to Lab</Link>
       </div>
     );
   }
+
+  // Logic for Dynamic Previous/Next buttons
+  const prevPost = postIndex > 0 ? BLOG_POSTS[postIndex - 1] : null;
+  const nextPost = postIndex < BLOG_POSTS.length - 1 ? BLOG_POSTS[postIndex + 1] : null;
 
   return (
     <div className="pt-32 pb-20 px-6 md:px-12 bg-[#fcfcfd] min-h-screen font-sans">
@@ -27,7 +32,6 @@ const BlogPost = () => {
         <div className="lg:col-span-3">
           <div className="bg-white p-6 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100">
             
-            {/* SEO Breadcrumbs */}
             <Breadcrumbs items={[{ label: 'Theory Lab', path: '/theory-lab' }, { label: post.title, path: '' }]} />
             
             <header className="mt-8 mb-10">
@@ -47,7 +51,17 @@ const BlogPost = () => {
               </div>
             </header>
 
-            {/* THE CONTENT: Uses dangerouslySetInnerHTML so you can just paste HTML text */}
+            {/* FEATURED DIAGRAM (Crucial for Engineering Blogs) */}
+            {post.image && (
+              <div className="mb-12 rounded-3xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
+                <img src={post.image} alt={post.title} className="w-full h-auto object-cover" />
+                <p className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fig 1.1: Structural Diagram and Site Overview</p>
+              </div>
+            )}
+
+            {/* Image of civil engineering foundation types diagram */}
+            
+
             <div 
               className="prose prose-slate max-w-none 
                 prose-h2:text-2xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-12
@@ -57,57 +71,58 @@ const BlogPost = () => {
               dangerouslySetInnerHTML={{ __html: post.content }} 
             />
 
-            {/* PREVIOUS / NEXT NAVIGATION */}
+            {/* DYNAMIC PREVIOUS / NEXT NAVIGATION */}
             <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center">
-              <button className="flex flex-col items-start group">
-                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1 group-hover:text-blue-600 transition-colors">« Previous</span>
-                <span className="text-sm font-bold text-slate-500">Water Intake Structures</span>
-              </button>
-              <button className="flex flex-col items-end group">
-                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1 group-hover:text-blue-600 transition-colors">Next »</span>
-                <span className="text-sm font-bold text-slate-500">Spillway Design</span>
-              </button>
+              {prevPost ? (
+                <Link to={`/theory-lab/${prevPost.id}`} className="flex flex-col items-start group no-underline">
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1 group-hover:text-blue-600 transition-colors">« Previous Article</span>
+                  <span className="text-sm font-bold text-slate-500 group-hover:text-slate-800">{prevPost.title}</span>
+                </Link>
+              ) : <div />}
+
+              {nextPost ? (
+                <Link to={`/theory-lab/${nextPost.id}`} className="flex flex-col items-end group no-underline text-right">
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1 group-hover:text-blue-600 transition-colors">Next Article »</span>
+                  <span className="text-sm font-bold text-slate-500 group-hover:text-slate-800">{nextPost.title}</span>
+                </Link>
+              ) : <div />}
             </div>
           </div>
         </div>
 
-        {/* --- SIDEBAR AREA (25% Width) --- */}
+        {/* --- SIDEBAR AREA --- */}
         <aside className="lg:col-span-1 space-y-8">
           
-          {/* SEARCH BAR (Global Standard) */}
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
             <h4 className="text-[10px] font-black uppercase tracking-[3px] text-slate-400 mb-4">Search Theory</h4>
             <div className="relative">
-              <input type="text" placeholder="Search..." className="w-full bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500" />
+              <input 
+                type="text" 
+                placeholder="Find a topic..." 
+                className="w-full bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* TOP RESOURCES (As seen in your Civil E Blog screenshot) */}
           <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
             <h4 className="text-[10px] font-black uppercase tracking-[3px] text-blue-600 mb-6 border-b border-slate-50 pb-4">Top Resources</h4>
             <ul className="space-y-4">
-              {['Top Civil Engineering Schools', 'Standard Brick Size & Dimensions', 'Concrete Mix Ratio', 'Types of Foundation', 'Ready Mix Concrete'].map((item, i) => (
-                <li key={i} className="text-[13px] font-bold text-slate-600 hover:text-blue-600 cursor-pointer transition-colors border-b border-slate-50 pb-2 last:border-none">
-                  {item}
+              {BLOG_POSTS.slice(0, 5).map((item) => (
+                <li key={item.id} className="text-[13px] font-bold text-slate-600 hover:text-blue-600 cursor-pointer transition-colors border-b border-slate-50 pb-2 last:border-none">
+                  <Link to={`/theory-lab/${item.id}`} className="no-underline text-inherit">{item.title}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* ADSENSE PLACEHOLDER (Manual Reviewers look for this structure) */}
-          <div className="bg-slate-100/50 border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center">
-            <span className="text-[10px] font-black text-slate-300 uppercase tracking-[4px]">Ad Space</span>
+          <div className="bg-slate-900 p-8 rounded-[2rem] text-white shadow-xl shadow-blue-100 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/20 rounded-full -mr-12 -mt-12"></div>
+            <h4 className="font-black text-xs uppercase tracking-widest mb-4">Engineering Hub</h4>
+            <p className="text-[11px] leading-relaxed opacity-70 mb-6">Access professional PDF tools and calculation modules for your coursework.</p>
+            <button onClick={() => navigate('/')} className="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all">Launch Tools</button>
           </div>
-
-          {/* SOCIAL CONNECT */}
-          <div className="bg-blue-600 p-8 rounded-[2rem] text-white shadow-xl shadow-blue-100">
-            <h4 className="font-black text-xs uppercase tracking-widest mb-4">Join Our Community</h4>
-            <p className="text-xs leading-relaxed opacity-80 mb-6">Stay updated with the latest in civil engineering theory and digital tools.</p>
-            <button className="w-full bg-white text-blue-600 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all">Follow on LinkedIn</button>
-          </div>
-
         </aside>
-
       </div>
     </div>
   );
