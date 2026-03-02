@@ -19,7 +19,10 @@ import TermsOfService from './components/TermsOfService';
 import SeoContent from './components/SeoContent';
 
 // NEW: Placeholder Components for Content sections (Create these files later)
-const TheoryLab = () => (
+import BlogList from './components/BlogList';
+import BlogPost from './components/BlogPost';
+import About from './components/About';
+import Contact from './components/Contact';
   <div className="pt-32 pb-20 px-6 md:px-20 min-h-screen bg-white">
     <div className="max-w-4xl mx-auto">
       <h1 className="text-4xl font-black text-slate-900 mb-6">Theory Lab</h1>
@@ -188,13 +191,21 @@ const App: React.FC = () => {
             } />
 
             {/* 2. CONTENT SECTIONS (CRITICAL FOR ADSENSE) */}
-            <Route path="/theory-lab" element={<TheoryLab />} />
-            <Route path="/theory-lab" element={<BlogList />} /> 
-            <Route path="/theory-lab/:slug" element={<BlogPost />} />
-            <Route path="/student-corner" element={<StudentCorner />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
+            <Routes>
+  {/* Home Page */}
+  <Route path="/" element={<HomeLayout />} />
+
+  {/* THEORY LAB - This now opens the Grid of Articles */}
+  <Route path="/theory-lab" element={<BlogList />} /> 
+
+  {/* BLOG POST - This opens the specific article with the SIDEBAR */}
+  <Route path="/theory-lab/:slug" element={<BlogPost />} />
+
+  {/* OTHER PAGES */}
+  <Route path="/about" element={<About />} />
+  <Route path="/contact" element={<Contact />} />
+  <Route path="/student-corner" element={<StudentCorner />} />
+</Routes>
             
             {/* 3. 404 / CATCH-ALL REDIRECT */}
             <Route path="*" element={<Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />} />
