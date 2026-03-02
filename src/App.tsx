@@ -11,6 +11,8 @@ import Workspace from './components/Workspace';
 import Footer from './components/Footer';
 
 // Legal & Info Components
+import BlogList from './components/BlogList'; // <-- This fixes Theory Lab
+import BlogPost from './components/BlogPost';
 import About from './components/About';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
