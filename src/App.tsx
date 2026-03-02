@@ -187,6 +187,8 @@ const App: React.FC = () => {
 
             {/* 2. CONTENT SECTIONS (CRITICAL FOR ADSENSE) */}
             <Route path="/theory-lab" element={<TheoryLab />} />
+            <Route path="/theory-lab" element={<BlogList />} /> 
+            <Route path="/theory-lab/:slug" element={<BlogPost />} />
             <Route path="/student-corner" element={<StudentCorner />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
