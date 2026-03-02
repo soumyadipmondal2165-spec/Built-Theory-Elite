@@ -10,51 +10,34 @@ import ToolGrid from './components/ToolGrid';
 import Workspace from './components/Workspace';
 import Footer from './components/Footer';
 
-// Legal & Info Components
-import BlogList from './components/BlogList'; // <-- This fixes Theory Lab
+// Professional Components (These MUST be imported once)
+import BlogList from './components/BlogList'; 
 import BlogPost from './components/BlogPost';
 import About from './components/About';
+import Contact from './components/Contact';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import SeoContent from './components/SeoContent';
 
-// NEW: Placeholder Components for Content sections (Create these files later)
-import BlogList from './components/BlogList';
-import BlogPost from './components/BlogPost';
-import About from './components/About';
-import Contact from './components/Contact';
-  <div className="pt-32 pb-20 px-6 md:px-20 min-h-screen bg-white">
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-black text-slate-900 mb-6">Theory Lab</h1>
-      <p className="text-xl text-slate-600 leading-relaxed">
-        Bridging the gap between engineering textbooks and site reality. 
-        Explore deep-dives into structural analysis, materials, and modern construction tech.
-      </p>
-      {/* Blog list will go here */}
-      <div className="mt-12 p-10 border-2 border-dashed border-slate-200 rounded-3xl text-center">
-        <span className="text-slate-400 font-bold uppercase tracking-widest">New Articles Coming Weekly</span>
-      </div>
-    </div>
-  </div>
-);
-
+// We only keep StudentCorner here as a placeholder for now
 const StudentCorner = () => (
   <div className="pt-32 pb-20 px-6 md:px-20 min-h-screen bg-slate-50">
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-black text-slate-900 mb-6">Student Corner</h1>
-      <p className="text-xl text-slate-600 leading-relaxed">
-        Dedicated resources for MAKAUT Civil Engineering students. Notes, semester guides, and career roadmaps for West Bengal engineers.
+      <h1 className="text-4xl font-black text-slate-900 mb-6 uppercase tracking-tighter">Student Corner</h1>
+      <p className="text-xl text-slate-600 leading-relaxed font-medium">
+        Dedicated resources for Civil Engineering students. Notes, semester guides, and career roadmaps.
       </p>
       <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 className="font-bold text-blue-600">MAKAUT Resources</h3>
-          <p className="text-sm text-slate-500 mt-2">Previous year papers and semester-wise theory notes.</p>
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+          <h3 className="font-black text-blue-600 uppercase text-xs tracking-widest">Global Resources</h3>
+          <p className="text-sm text-slate-500 mt-2">Study materials and theory notes coming soon.</p>
         </div>
       </div>
     </div>
   </div>
 );
 
+// REST OF YOUR FIREBASE CONFIG AND APP COMPONENT STARTS BELOW...
 import { TOOLS } from './constants';
 import { Tool, User } from './types';
 
