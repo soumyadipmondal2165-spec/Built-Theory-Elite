@@ -3,14 +3,14 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
 
-// 1. CORE UI COMPONENTS
+// UI Components
 import Header from './components/Header';
 import Hero from './components/Hero';
 import ToolGrid from './components/ToolGrid';
 import Workspace from './components/Workspace';
 import Footer from './components/Footer';
 
-// 2. PROFESSIONAL CONTENT COMPONENTS (The "Fix" for white screens)
+// Professional Content Components
 import BlogList from './components/BlogList'; 
 import BlogPost from './components/BlogPost';
 import About from './components/About';
@@ -19,7 +19,11 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import SeoContent from './components/SeoContent';
 
-// 3. STUDENT CORNER (Keep this simple for now)
+// Types and Constants
+import { TOOLS } from './constants';
+import { Tool, User } from './types';
+
+// 1. STUDENT CORNER COMPONENT
 const StudentCorner = () => (
   <div className="pt-40 pb-20 px-6 md:px-20 min-h-screen bg-slate-50 text-center">
     <div className="max-w-4xl mx-auto">
@@ -31,7 +35,7 @@ const StudentCorner = () => (
   </div>
 );
 
-// FIREBASE CONFIG STARTS HERE...
+// 2. FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyAZvTrFE81bYQ2R7JxQZnV3x6tmh_j6yL0",
   authDomain: "built-theory-auth-439a4.firebaseapp.com",
@@ -46,7 +50,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Razorpay Config
+// 3. RAZORPAY CONFIG
 const RZP_KEY = "rzp_live_SDvXBbpBeVUe5U";
 declare var Razorpay: any;
 
@@ -63,7 +67,6 @@ const App: React.FC = () => {
   const [showPricing, setShowPricing] = useState(false);
   const [proToolAttempt, setProToolAttempt] = useState<Tool | null>(null);
 
-  // Authentication logic (Kept from your previous code)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -106,13 +109,11 @@ const App: React.FC = () => {
               setProToolAttempt(null);
           },
           prefill: { email: user.email },
-          theme: { color: "#2563eb" } // Updated to professional Blue
+          theme: { color: "#2563eb" }
       };
       const rzp1 = new Razorpay(options);
       rzp1.open();
   };
-
-  const handleJoinPro = () => setShowPricing(true);
 
   const handleSelectTool = (tool: Tool) => {
     if (tool.isPro && !user?.isPremium) {
@@ -140,16 +141,16 @@ const App: React.FC = () => {
           user={user} 
           onLogin={handleLogin} 
           onLogout={handleLogout} 
-          onJoinPro={handleJoinPro} 
+          onJoinPro={() => setShowPricing(true)} 
           scrollToTools={scrollToTools}
         />
         
         <main className="flex-grow">
           <Routes>
-            {/* 1. PROFESSIONAL LANDING PAGE */}
+            {/* 1. HOME PAGE */}
             <Route path="/" element={
               <>
-                <Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />
+                <Hero onExplore={scrollToTools} onJoinPro={() => setShowPricing(true)} />
                 <div id="tools" className="py-20 px-6 md:px-12 bg-white rounded-t-[3rem] shadow-2xl -mt-10 relative z-10">
                    <div className="max-w-7xl mx-auto">
                     <div className="mb-12 text-center md:text-left">
@@ -163,74 +164,48 @@ const App: React.FC = () => {
               </>
             } />
 
-            {/* 2. CONTENT SECTIONS (CRITICAL FOR ADSENSE) */}
-            <Routes>
-  {/* Home Page */}
-  <Route path="/" element={<HomeLayout />} />
-
-  {/* THEORY LAB - This now opens the Grid of Articles */}
-  <Route path="/theory-lab" element={<BlogList />} /> 
-
-  {/* BLOG POST - This opens the specific article with the SIDEBAR */}
-  <Route path="/theory-lab/:slug" element={<BlogPost />} />
-
-  {/* OTHER PAGES */}
-  <Route path="/about" element={<About />} />
-  <Route path="/contact" element={<Contact />} />
-  <Route path="/student-corner" element={<StudentCorner />} />
-</Routes>
+            {/* 2. DYNAMIC CONTENT PAGES */}
+            <Route path="/theory-lab" element={<BlogList />} /> 
+            <Route path="/theory-lab/:slug" element={<BlogPost />} />
+            <Route path="/student-corner" element={<StudentCorner />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             
-            {/* 3. 404 / CATCH-ALL REDIRECT */}
-            <Route path="*" element={<Hero onExplore={scrollToTools} onJoinPro={handleJoinPro} />} />
+            {/* 3. 404 REDIRECT */}
+            <Route path="*" element={<Hero onExplore={scrollToTools} onJoinPro={() => setShowPricing(true)} />} />
           </Routes>
         </main>
 
         <Footer />
 
-        {/* --- WORKSPACE OVERLAY --- */}
-        {activeTool && (
-          <Workspace 
-              tool={activeTool} 
-              user={user}
-              onClose={() => setActiveTool(null)} 
-              onJoinPro={handleJoinPro}
-          />
-        )}
-
-        {/* --- PROFESSIONAL PRICING MODAL --- */}
+        {/* --- PRICING MODAL --- */}
         {showPricing && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
             <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md" onClick={() => setShowPricing(false)}></div>
-            <div className="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl relative z-[110] animate-in zoom-in duration-300">
-                <button onClick={() => setShowPricing(false)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-all">
-                   <span className="text-2xl">&times;</span>
-                </button>
-                <div className="p-12">
-                    <div className="text-center mb-10">
-                        <span className="bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">Membership Plans</span>
-                        <h2 className="text-4xl font-black text-slate-900 mt-4">Elevate Your Engineering</h2>
-                        <p className="text-slate-500 mt-2">Unlimited processing and advanced structural tools.</p>
+            <div className="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl relative z-[110] p-12 animate-in zoom-in duration-300">
+                <button onClick={() => setShowPricing(false)} className="absolute top-6 right-6 text-2xl text-slate-400 hover:text-slate-600">&times;</button>
+                <div className="text-center mb-10">
+                    <h2 className="text-4xl font-black text-slate-900">Elevate Your Engineering</h2>
+                    <p className="text-slate-500 mt-2">Unlimited processing and advanced structural tools.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="p-8 border border-slate-100 rounded-3xl cursor-pointer" onClick={() => handlePayment(59, "Weekly")}>
+                        <h3 className="font-bold text-slate-400 text-xs mb-4">WEEKLY</h3>
+                        <div className="text-4xl font-black text-slate-900 mb-6">₹59</div>
+                        <button className="w-full py-3 bg-slate-100 rounded-xl font-bold">Select</button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Weekly Plan */}
-                        <div className="p-8 border border-slate-100 rounded-3xl hover:border-blue-500 transition-all group cursor-pointer" onClick={() => handlePayment(59, "Weekly")}>
-                            <h3 className="font-bold text-slate-400 text-xs tracking-widest uppercase mb-4">Weekly Access</h3>
-                            <div className="text-4xl font-black text-slate-900 mb-6">₹59</div>
-                            <button className="w-full py-3 bg-slate-100 group-hover:bg-blue-600 group-hover:text-white rounded-xl font-bold transition-all">Select</button>
-                        </div>
-                        {/* Monthly Plan - High Impact */}
-                        <div className="p-8 border-4 border-blue-600 rounded-[2rem] shadow-2xl shadow-blue-100 relative bg-white transform md:scale-105 cursor-pointer" onClick={() => handlePayment(199, "Monthly")}>
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg">MOST POPULAR</div>
-                            <h3 className="font-bold text-blue-600 text-xs tracking-widest uppercase mb-4">Monthly Pro</h3>
-                            <div className="text-5xl font-black text-slate-900 mb-6">₹199</div>
-                            <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Get Pro Now</button>
-                        </div>
-                        {/* Yearly Plan */}
-                        <div className="p-8 border border-slate-100 rounded-3xl hover:border-blue-500 transition-all group cursor-pointer" onClick={() => handlePayment(1999, "Yearly")}>
-                            <h3 className="font-bold text-slate-400 text-xs tracking-widest uppercase mb-4">Full Year</h3>
-                            <div className="text-4xl font-black text-slate-900 mb-6">₹1999</div>
-                            <button className="w-full py-3 bg-slate-100 group-hover:bg-blue-600 group-hover:text-white rounded-xl font-bold transition-all">Select</button>
-                        </div>
+                    <div className="p-8 border-4 border-blue-600 rounded-[2rem] shadow-2xl relative bg-white transform md:scale-105" onClick={() => handlePayment(199, "Monthly")}>
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black px-4 py-1 rounded-full">MOST POPULAR</div>
+                        <h3 className="font-bold text-blue-600 text-xs mb-4">MONTHLY</h3>
+                        <div className="text-5xl font-black text-slate-900 mb-6">₹199</div>
+                        <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-black">Get Pro Now</button>
+                    </div>
+                    <div className="p-8 border border-slate-100 rounded-3xl cursor-pointer" onClick={() => handlePayment(1999, "Yearly")}>
+                        <h3 className="font-bold text-slate-400 text-xs mb-4">YEARLY</h3>
+                        <div className="text-4xl font-black text-slate-900 mb-6">₹1999</div>
+                        <button className="w-full py-3 bg-slate-100 rounded-xl font-bold">Select</button>
                     </div>
                 </div>
             </div>
@@ -241,22 +216,24 @@ const App: React.FC = () => {
         {proToolAttempt && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" onClick={() => setProToolAttempt(null)}></div>
-            <div className="bg-white rounded-[2rem] max-w-md w-full p-10 relative z-[110] text-center shadow-2xl animate-in fade-in zoom-in duration-200">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-                    <span>🔒</span>
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">{proToolAttempt.name}</h3>
-                <p className="text-slate-500 mb-8 font-medium">This is a premium engineering module. Join Built-Theory PRO for unlimited access.</p>
-                <div className="flex flex-col gap-4">
-                    <button onClick={() => { setProToolAttempt(null); setShowPricing(true); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
-                        Unlock Now
-                    </button>
-                    <button onClick={() => setProToolAttempt(null)} className="w-full py-2 text-slate-400 font-bold hover:text-slate-600 transition-colors">
-                        Maybe Later
-                    </button>
-                </div>
+            <div className="bg-white rounded-[2rem] max-w-md w-full p-10 relative z-[110] text-center shadow-2xl">
+                <div className="text-4xl mb-6">🔒</div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">{proToolAttempt.name} is a PRO Tool</h3>
+                <p className="text-slate-500 mb-8">Join Built-Theory PRO to unlock this tool and remove all limits.</p>
+                <button onClick={() => { setProToolAttempt(null); setShowPricing(true); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg">
+                    Unlock Now
+                </button>
             </div>
           </div>
+        )}
+
+        {activeTool && (
+          <Workspace 
+              tool={activeTool} 
+              user={user}
+              onClose={() => setActiveTool(null)} 
+              onJoinPro={() => setShowPricing(true)}
+          />
         )}
       </div>
     </Router>
