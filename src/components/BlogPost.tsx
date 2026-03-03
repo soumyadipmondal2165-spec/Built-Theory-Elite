@@ -63,14 +63,22 @@ const BlogPost = () => {
             
 
             <div 
-              className="prose prose-slate max-w-none 
-                prose-h2:text-2xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-12
-                prose-h3:text-xl prose-h3:font-bold prose-h3:text-slate-800
-                prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-[16px]
-                prose-ul:text-slate-600 prose-li:mb-2"
-              dangerouslySetInnerHTML={{ __html: post.content }} 
-            />
-
+  className="prose prose-slate max-w-none 
+    /* Spacing and Justification for Paragraphs */
+    prose-p:text-slate-600 prose-p:leading-[1.8] prose-p:mb-8 prose-p:text-justify prose-p:text-[16px]
+    
+    /* Stronger Heading Visuals and Spacing */
+    prose-h2:text-3xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-14 prose-h2:mb-6
+    prose-h3:text-xl prose-h3:font-bold prose-h3:text-slate-800 prose-h3:mt-10 prose-h3:mb-4
+    
+    /* Professional Bullet Point (List) Alignment */
+    prose-ul:my-8 prose-ul:list-disc prose-ul:pl-8
+    prose-li:text-slate-600 prose-li:mb-4 prose-li:leading-relaxed
+    
+    /* Bold text color correction */
+    prose-strong:text-slate-900 prose-strong:font-bold"
+  dangerouslySetInnerHTML={{ __html: post.content }} 
+/>
             {/* DYNAMIC PREVIOUS / NEXT NAVIGATION */}
             <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center">
               {prevPost ? (
