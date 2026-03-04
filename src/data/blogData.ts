@@ -67,5 +67,5 @@ export const BLOG_POSTS: BlogPost[] = [
       <li><strong>Soil Condition:</strong> Shallow foundations for stable ground close to surface; deep foundations for filled-up ground or weak layers.</li>
       <li><strong>Building Loads:</strong> Shallow foundations for low-rise buildings; deep foundations for high-rise structures with high load intensity.</li>
     </ul>
-  `
 }
+]; //
