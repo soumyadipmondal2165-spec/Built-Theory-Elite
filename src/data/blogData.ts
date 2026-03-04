@@ -57,9 +57,7 @@ export const BLOG_POSTS: BlogPost[] = [
         <li><strong>Well (Caissons) Foundation:</strong> Hollow structures constructured at the site and sunk into place.</li>
       </ul>
     `
-  }
-]; // <--- THIS WAS MISSING AND CAUSED THE ERROR!
-,
+},
 {
   id: "self-healing-concrete-technology",
   title: "Self-Healing Concrete: The Future of Maintenance-Free Infrastructure",
@@ -94,4 +92,4 @@ export const BLOG_POSTS: BlogPost[] = [
     <p>While the initial cost of bio-concrete is higher than conventional mixes, the long-term savings in maintenance and the increased safety of the structure make it a vital technology for 2026 and beyond. As we scale production, self-healing concrete will become the standard for resilient, sustainable civil engineering.</p>
   `
   }
-];
+]; //
