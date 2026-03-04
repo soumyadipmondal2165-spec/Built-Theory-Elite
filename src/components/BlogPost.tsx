@@ -62,21 +62,18 @@ const BlogPost = () => {
             {/* Image of civil engineering foundation types diagram */}
             
 
-            <div 
+           <div 
   className="prose prose-slate max-w-none 
-    /* Spacing and Justification for Paragraphs */
-    prose-p:text-slate-600 prose-p:leading-[1.8] prose-p:mb-8 prose-p:text-justify prose-p:text-[16px]
+    /* This creates the gap between paragraphs */
+    prose-p:mb-10 prose-p:text-slate-600 prose-p:leading-[1.9] prose-p:text-justify
     
-    /* Stronger Heading Visuals and Spacing */
-    prose-h2:text-3xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-14 prose-h2:mb-6
-    prose-h3:text-xl prose-h3:font-bold prose-h3:text-slate-800 prose-h3:mt-10 prose-h3:mb-4
+    /* This creates space around headings */
+    prose-h2:mt-16 prose-h2:mb-8 prose-h2:text-3xl prose-h2:font-black
+    prose-h3:mt-12 prose-h3:mb-6 prose-h3:text-2xl prose-h3:font-bold
     
-    /* Professional Bullet Point (List) Alignment */
-    prose-ul:my-8 prose-ul:list-disc prose-ul:pl-8
-    prose-li:text-slate-600 prose-li:mb-4 prose-li:leading-relaxed
-    
-    /* Bold text color correction */
-    prose-strong:text-slate-900 prose-strong:font-bold"
+    /* This indents your bullet points */
+    prose-ul:my-10 prose-ul:list-disc prose-ul:pl-10
+    prose-li:mb-4 prose-li:text-slate-600"
   dangerouslySetInnerHTML={{ __html: post.content }} 
 />
             {/* DYNAMIC PREVIOUS / NEXT NAVIGATION */}
