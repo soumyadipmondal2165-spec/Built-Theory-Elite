@@ -59,7 +59,7 @@ export const BLOG_POSTS: BlogPost[] = [
     `
   }
 ]; // <--- THIS WAS MISSING AND CAUSED THE ERROR!
-
+,
 {
   id: "self-healing-concrete-technology",
   title: "Self-Healing Concrete: The Future of Maintenance-Free Infrastructure",
