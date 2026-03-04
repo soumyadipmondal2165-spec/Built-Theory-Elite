@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Breadcrumbs from './Breadcrumbs';
 import { BLOG_POSTS } from '../data/blogData';
+import AdBanner from './AdBanner'; // Import your new component
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -51,36 +52,42 @@ const BlogPost = () => {
               </div>
             </header>
 
+            {/* AD PLACEMENT: Before Featured Image */}
+            <AdBanner />
+
             {/* FEATURED DIAGRAM (Crucial for Engineering Blogs) */}
             {post.image && (
-              <div className="mb-12 rounded-3xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
+              <div className="mb-12 mt-8 rounded-3xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
                 <img src={post.image} alt={post.title} className="w-full h-auto object-cover" />
                 <p className="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fig 1.1: Structural Diagram and Site Overview</p>
               </div>
             )}
 
-            {/* Image of civil engineering foundation types diagram */}
-            
+            <div 
+              className="prose prose-slate max-w-none 
+                /* Scientific Line Spacing and Paragraph Gaps */
+                prose-p:text-slate-700 prose-p:leading-[1.9] prose-p:mb-10 prose-p:text-justify
+                
+                /* Bold Headings with Colon Style */
+                prose-h2:text-2xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-16 prose-h2:mb-6
+                prose-h3:text-lg prose-h3:font-bold prose-h3:text-slate-800 prose-h3:mt-10 prose-h3:mb-4
+                
+                /* Technical Tables */
+                prose-table:border-collapse prose-table:border prose-table:border-slate-200 prose-table:my-10
+                prose-th:bg-slate-50 prose-th:p-3 prose-th:border prose-th:border-slate-200 prose-th:text-xs prose-th:uppercase
+                prose-td:p-3 prose-td:border prose-td:border-slate-200 prose-td:text-sm
+                
+                /* Scientific Lists */
+                prose-ul:my-10 prose-ul:list-square prose-ul:pl-8
+                prose-li:mb-3"
+              dangerouslySetInnerHTML={{ __html: post.content }} 
+            />
 
-          <div 
-  className="prose prose-slate max-w-none 
-    /* Scientific Line Spacing and Paragraph Gaps */
-    prose-p:text-slate-700 prose-p:leading-[1.9] prose-p:mb-10 prose-p:text-justify
-    
-    /* Bold Headings with Colon Style */
-    prose-h2:text-2xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-16 prose-h2:mb-6
-    prose-h3:text-lg prose-h3:font-bold prose-h3:text-slate-800 prose-h3:mt-10 prose-h3:mb-4
-    
-    /* Technical Tables */
-    prose-table:border-collapse prose-table:border prose-table:border-slate-200 prose-table:my-10
-    prose-th:bg-slate-50 prose-th:p-3 prose-th:border prose-th:border-slate-200 prose-th:text-xs prose-th:uppercase
-    prose-td:p-3 prose-td:border prose-td:border-slate-200 prose-td:text-sm
-    
-    /* Scientific Lists */
-    prose-ul:my-10 prose-ul:list-square prose-ul:pl-8
-    prose-li:mb-3"
-  dangerouslySetInnerHTML={{ __html: post.content }} 
-/>
+            {/* SECOND AD PLACEMENT: Before Navigation */}
+            <div className="mt-12">
+              <AdBanner />
+            </div>
+
             {/* DYNAMIC PREVIOUS / NEXT NAVIGATION */}
             <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center">
               {prevPost ? (
