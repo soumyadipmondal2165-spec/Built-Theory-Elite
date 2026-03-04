@@ -52,7 +52,7 @@ const BlogPost = () => {
               </div>
             </header>
 
-            {/* AD PLACEMENT: Before Featured Image */}
+            {/* AD PLACEMENT 1: Before Featured Image */}
             <AdBanner />
 
             {/* FEATURED DIAGRAM (Crucial for Engineering Blogs) */}
@@ -63,28 +63,22 @@ const BlogPost = () => {
               </div>
             )}
 
+            {/* Scientific Prose Section */}
             <div 
               className="prose prose-slate max-w-none 
-                /* Scientific Line Spacing and Paragraph Gaps */
                 prose-p:text-slate-700 prose-p:leading-[1.9] prose-p:mb-10 prose-p:text-justify
-                
-                /* Bold Headings with Colon Style */
                 prose-h2:text-2xl prose-h2:font-black prose-h2:text-slate-900 prose-h2:mt-16 prose-h2:mb-6
                 prose-h3:text-lg prose-h3:font-bold prose-h3:text-slate-800 prose-h3:mt-10 prose-h3:mb-4
-                
-                /* Technical Tables */
                 prose-table:border-collapse prose-table:border prose-table:border-slate-200 prose-table:my-10
                 prose-th:bg-slate-50 prose-th:p-3 prose-th:border prose-th:border-slate-200 prose-th:text-xs prose-th:uppercase
                 prose-td:p-3 prose-td:border prose-td:border-slate-200 prose-td:text-sm
-                
-                /* Scientific Lists */
                 prose-ul:my-10 prose-ul:list-square prose-ul:pl-8
                 prose-li:mb-3"
               dangerouslySetInnerHTML={{ __html: post.content }} 
             />
 
-            {/* SECOND AD PLACEMENT: Before Navigation */}
-            <div className="mt-12">
+            {/* AD PLACEMENT 2: Before Bottom Navigation */}
+            <div className="my-12">
               <AdBanner />
             </div>
 
@@ -120,6 +114,12 @@ const BlogPost = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+          </div>
+
+          {/* AD PLACEMENT 3: Sidebar Banner */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm text-center overflow-hidden">
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-3">Advertisement</span>
+            <AdBanner />
           </div>
 
           <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
