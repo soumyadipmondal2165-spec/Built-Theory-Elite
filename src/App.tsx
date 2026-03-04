@@ -18,6 +18,7 @@ import Contact from './components/Contact';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import SeoContent from './components/SeoContent';
+import AdBanner from './components/AdBanner';
 
 // Types and Constants
 import { TOOLS } from './constants';
