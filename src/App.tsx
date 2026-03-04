@@ -68,6 +68,7 @@ const App: React.FC = () => {
   const [showPricing, setShowPricing] = useState(false);
   const [proToolAttempt, setProToolAttempt] = useState<Tool | null>(null);
 
+ // 1. Your existing Firebase Auth Effect
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -84,6 +85,21 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // 2. PASTE THE ADSTERRA SOCIAL BAR EFFECT HERE
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "//pl28840686.effectivegatecpm.com/c4/ad/18/c4ad1808bcff4c49e5ad282f74c820df.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {
+        // Script might have already been removed
+      }
+    };
+  }, []);
   const handleLogin = async () => {
     try { await signInWithPopup(auth, provider); } 
     catch (error) { console.error("Login failed", error); }
