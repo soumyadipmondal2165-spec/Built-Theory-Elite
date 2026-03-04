@@ -59,3 +59,38 @@ export const BLOG_POSTS: BlogPost[] = [
     `
   }
 ]; // <--- THIS WAS MISSING AND CAUSED THE ERROR!
+
+{
+  id: "self-healing-concrete-technology",
+  title: "Self-Healing Concrete: The Future of Maintenance-Free Infrastructure",
+  category: "Materials",
+  date: "March 4, 2026",
+  excerpt: "An investigation into bio-concrete systems using Bacillus bacteria to autonomously repair structural micro-cracks and extend building lifespans.",
+  content: `
+    <h2>Introduction</h2>
+    <p>Concrete is the most widely used construction material globally, yet it is inherently prone to cracking due to thermal expansion, shrinkage, and mechanical loading. Traditional repair methods are costly and often ineffective for internal micro-cracks. Self-healing concrete represents a revolutionary shift, utilizing biological agents to repair damage without human intervention.</p>
+
+    
+    <h2>Mechanism of Bio-Healing</h2>
+    <p>The technology involves embedding specialized bacteria, such as <strong>Bacillus pseudofirmus</strong>, into the concrete mix during the batching process. These bacteria remain dormant within the alkaline environment of the concrete until a crack appears.</p>
+    
+    <h3>The Healing Process</h3>
+    <ul>
+      <li><strong>Activation:</strong> Cracks allow moisture and oxygen to enter the concrete matrix.</li>
+      <li><strong>Germination:</strong> Water activates the dormant bacterial spores.</li>
+      <li><strong>Precipitation:</strong> The bacteria consume a nutrient source (calcium lactate) and produce calcium carbonate (limestone).</li>
+      <li><strong>Sealing:</strong> The limestone fills the crack, restoring the material's impermeability.</li>
+    </ul>
+
+    <h2>Structural Benefits</h2>
+    <p>Implementing self-healing systems provides three primary advantages for global infrastructure projects:</p>
+    <ul>
+      <li><strong>Durability:</strong> Prevents the ingress of chlorides and sulfates that cause steel reinforcement corrosion.</li>
+      <li><strong>Cost Reduction:</strong> Minimizes the need for manual inspection and repair in hard-to-reach structures like bridges and tunnels.</li>
+      <li><strong>Environmental Impact:</strong> Extends the service life of buildings, significantly reducing the carbon footprint associated with demolition and reconstruction.</li>
+    </ul>
+
+    <h2>Conclusion</h2>
+    <p>While the initial cost of bio-concrete is higher than conventional mixes, the long-term savings in maintenance and the increased safety of the structure make it a vital technology for 2026 and beyond. As we scale production, self-healing concrete will become the standard for resilient, sustainable civil engineering.</p>
+  `
+}
