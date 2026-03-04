@@ -93,4 +93,5 @@ export const BLOG_POSTS: BlogPost[] = [
     <h2>Conclusion</h2>
     <p>While the initial cost of bio-concrete is higher than conventional mixes, the long-term savings in maintenance and the increased safety of the structure make it a vital technology for 2026 and beyond. As we scale production, self-healing concrete will become the standard for resilient, sustainable civil engineering.</p>
   `
-}
+  }
+];
